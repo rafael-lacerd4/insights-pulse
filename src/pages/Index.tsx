@@ -718,12 +718,24 @@ const Index = () => {
 
               {/* VETERANOS SUBPAGOS */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-warning/15 text-warning"><Clock className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Veteranos subpagos</h3>
                     <p className="text-xs text-muted-foreground">≥ 5 anos de casa recebendo abaixo da mediana do próprio cargo</p>
                   </div>
+                  <SortMenu
+                    value={vetSort}
+                    direction={vetDir}
+                    onDirectionChange={setVetDir}
+                    onChange={(v) => setVetSort(v as any)}
+                    options={[
+                      { value: "gap", label: "Gap salarial" },
+                      { value: "tempo", label: "Tempo de empresa" },
+                      { value: "salario", label: "Salário" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                    ]}
+                  />
                 </div>
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="rounded-lg bg-secondary/40 border border-border p-3">
@@ -742,7 +754,13 @@ const Index = () => {
                   </div>
                 </div>
                 <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
-                  {veteranosSubpagos.slice(0, 14).map((r, i) => (
+                  {[...veteranosSubpagos].sort((a, b) => {
+                    const dir = vetDir === "asc" ? 1 : -1;
+                    if (vetSort === "gap") return (a.gap - b.gap) * dir;
+                    if (vetSort === "tempo") return (a["Tempo Empresa"] - b["Tempo Empresa"]) * dir;
+                    if (vetSort === "salario") return (a["Salario Base"] - b["Salario Base"]) * dir;
+                    return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                  }).slice(0, 14).map((r, i) => (
                     <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
                       <span className="text-xs font-mono text-muted-foreground w-12 shrink-0">{fmtNum(r["Tempo Empresa"], 1)}a</span>
                       <div className="min-w-0 flex-1">
