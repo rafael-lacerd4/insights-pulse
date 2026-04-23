@@ -196,9 +196,21 @@ const Index = () => {
     datasets: [{
       label: "Custo Total (R$)",
       data: orderByCusto.map((s) => s.custoTotal),
-      backgroundColor: orderByCusto.map((s) => colorFor(s.setor)),
-      borderRadius: 8,
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart;
+        const { ctx: c, chartArea } = chart;
+        if (!chartArea) return colorFor(orderByCusto[ctx.dataIndex]?.setor ?? "");
+        const base = colorFor(orderByCusto[ctx.dataIndex]?.setor ?? "");
+        const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        g.addColorStop(0, base + "40");
+        g.addColorStop(1, base + "ff");
+        return g;
+      },
+      borderColor: orderByCusto.map((s) => colorFor(s.setor)),
+      borderWidth: 1.5,
+      borderRadius: 10,
       borderSkipped: false,
+      hoverBackgroundColor: orderByCusto.map((s) => colorFor(s.setor)),
     }],
   };
 
@@ -208,8 +220,19 @@ const Index = () => {
     datasets: [{
       label: "Produtividade Média",
       data: orderByProd.map((s) => s.prodMedia),
-      backgroundColor: orderByProd.map((s) => colorFor(s.setor)),
-      borderRadius: 8,
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart;
+        const { ctx: c, chartArea } = chart;
+        const base = colorFor(orderByProd[ctx.dataIndex]?.setor ?? "");
+        if (!chartArea) return base;
+        const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        g.addColorStop(0, base + "40");
+        g.addColorStop(1, base + "ff");
+        return g;
+      },
+      borderColor: orderByProd.map((s) => colorFor(s.setor)),
+      borderWidth: 1.5,
+      borderRadius: 10,
       borderSkipped: false,
     }],
   };
@@ -219,8 +242,10 @@ const Index = () => {
     datasets: [{
       data: agg.map((s) => s.headcount),
       backgroundColor: agg.map((s) => colorFor(s.setor)),
-      borderColor: "hsl(222 24% 10%)",
-      borderWidth: 3,
+      borderColor: "hsl(222 30% 8%)",
+      borderWidth: 4,
+      hoverOffset: 12,
+      hoverBorderWidth: 2,
     }],
   };
 
@@ -229,10 +254,14 @@ const Index = () => {
       label: s.setor,
       data: filtered
         .filter((r) => r.Setor === s.setor)
-        .map((r) => ({ x: r["Custo Total"], y: r.Produtividade })),
-      backgroundColor: colorFor(s.setor) + "cc",
-      pointRadius: 3,
-      pointHoverRadius: 6,
+        .map((r) => ({ x: r["Custo Total"], y: r.Produtividade, nome: r.Funcionario, cargo: r.Cargo })),
+      backgroundColor: colorFor(s.setor) + "bb",
+      borderColor: colorFor(s.setor),
+      borderWidth: 1,
+      pointRadius: 4,
+      pointHoverRadius: 8,
+      pointHoverBorderWidth: 2,
+      pointHoverBorderColor: "#fff",
     })),
   };
 
@@ -241,10 +270,19 @@ const Index = () => {
     datasets: [{
       label: "CO₂ Total (kg)",
       data: [...agg].sort((a, b) => b.co2Total - a.co2Total).map((s) => s.co2Total),
-      backgroundColor: "rgba(52, 211, 153, 0.6)",
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart;
+        const { ctx: c, chartArea } = chart;
+        if (!chartArea) return "rgba(52,211,153,0.7)";
+        const g = c.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+        g.addColorStop(0, "rgba(52,211,153,0.25)");
+        g.addColorStop(1, "rgba(52,211,153,0.95)");
+        return g;
+      },
       borderColor: "rgba(52, 211, 153, 1)",
-      borderWidth: 2,
-      borderRadius: 8,
+      borderWidth: 1.5,
+      borderRadius: 10,
+      borderSkipped: false,
     }],
   };
 
