@@ -747,23 +747,125 @@ const Index = () => {
                 <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground">
                   <Sparkles className="h-5 w-5" />
                 </div>
-                <h3 className="font-display text-xl font-semibold">Sumário gerencial</h3>
+                <div>
+                  <h3 className="font-display text-xl font-semibold">Análise Executiva Automática</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Insights gerados a partir dos dados em tempo real</p>
+                </div>
               </div>
-              <p className="text-base leading-relaxed text-foreground/90">{insights.summary}</p>
 
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {insights.cards.map((c, i) => (
-                  <div key={i} className="rounded-xl p-4 border border-border bg-secondary/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className={`uppercase text-[10px] tracking-wider border-${c.tone === "danger" ? "danger" : c.tone === "warning" ? "warning" : "primary"}/40`}>
-                        {c.tag}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{c.setor}</span>
-                    </div>
-                    <p className="text-sm leading-relaxed">{c.text}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-base leading-relaxed text-foreground/90">
+                A organização opera atualmente com <strong>{headcount.toLocaleString("pt-BR")} colaboradores</strong> em{" "}
+                <strong>{agg.length} setores</strong>, totalizando um custo mensal de{" "}
+                <strong>{fmtBRL(totalCusto)}</strong> e emissão de <strong>{fmtNum(totalCO2, 0)} kg de CO₂</strong>.
+              </p>
+
+              {/* Pontos de atenção imediata */}
+              <ExecBlock icon={Target} color="danger" title="Pontos de atenção imediata">
+                {setorMaisCaro && (
+                  <li>O setor <Hl color="danger">{setorMaisCaro.setor}</Hl> concentra o maior custo total (
+                    <strong>{fmtBRL(setorMaisCaro.custoTotal)}, {fmtNum((setorMaisCaro.custoTotal / totalCusto) * 100, 1)}% do total</strong>).</li>
+                )}
+                {setorMenosProd && (
+                  <li>O setor <Hl color="warning">{setorMenosProd.setor}</Hl> apresenta a menor produtividade média (
+                    <strong>{fmtNum(setorMenosProd.prodMedia, 1)}</strong>), indicando potencial de revisão de processos.</li>
+                )}
+                {setorMaiorCO2 && (
+                  <li>A maior emissão de CO₂ vem de <Hl color="warning">{setorMaiorCO2.setor}</Hl> (
+                    <strong>{fmtNum(setorMaiorCO2.co2Total, 1)} kg, {fmtNum((setorMaiorCO2.co2Total / totalCO2) * 100, 1)}% do total</strong>).</li>
+                )}
+                {setoresAltoCustoBaixaProd.length > 0 && (
+                  <li>Setores com <Hl color="danger">alto custo e baixa produtividade simultaneamente</Hl>:{" "}
+                    {setoresAltoCustoBaixaProd.join(", ")}.</li>
+                )}
+              </ExecBlock>
+
+              {/* Destaques positivos */}
+              <ExecBlock icon={CheckCircle2} color="success" title="Destaques positivos">
+                {setorMelhorCB && (
+                  <li>Melhor custo-benefício: <strong>{setorMelhorCB.setor}</strong> (
+                    {fmtNum(1000 / Math.max(setorMelhorCB.custoPorResultado, 1), 2)} pontos de produtividade por R$ 1.000 investidos).</li>
+                )}
+              </ExecBlock>
+
+              {/* Estagiários & Veteranos */}
+              <ExecBlock icon={GraduationCap} color="primary" title="Estagiários & Veteranos">
+                {estagiariosAcimaLimite.length > 0 && (
+                  <li>
+                    Foram identificados <strong>{estagiariosAcimaLimite.length} estagiários</strong> com salário acima do limite de{" "}
+                    {fmtBRL(LIMITE_ESTAGIO)}, gerando um desperdício anual estimado de{" "}
+                    <Hl color="danger">{fmtBRL(desperdicioEstagiarios)}</Hl>.
+                  </li>
+                )}
+                {veteranosSubpagos.length > 0 && (
+                  <li>
+                    <strong>{veteranosSubpagos.length} veteranos</strong> (≥ 5 anos de casa, tempo médio de{" "}
+                    <strong>{fmtNum(tempoMedioVet, 1)} anos</strong>) recebem{" "}
+                    <Hl color="warning">abaixo da mediana do próprio cargo</Hl>, somando um gap salarial de{" "}
+                    <strong>{fmtBRL(gapMensalTotal)}/mês</strong> (<Hl color="danger">{fmtBRL(gapMensalTotal * 12)}/ano</Hl>).
+                  </li>
+                )}
+                {topVeteranos.length > 0 && (
+                  <li>
+                    Casos mais críticos:{" "}
+                    {topVeteranos.map((v, i) => (
+                      <span key={i}>
+                        <strong>{v.Funcionario}</strong> ({v.Cargo}, {fmtNum(v["Tempo Empresa"], 1)}a, gap {fmtBRL(v.gap)})
+                        {i < topVeteranos.length - 1 ? "; " : "."}
+                      </span>
+                    ))}
+                  </li>
+                )}
+                {riscoDemissao.length > 0 && (
+                  <li>
+                    <Hl color="danger">{riscoDemissao.length} colaboradores com 8+ anos de casa</Hl> combinam custo acima da média e produtividade abaixo da média —
+                    sugere-se <strong>plano de desligamento estruturado</strong> ou requalificação, com economia anual projetada de{" "}
+                    <Hl color="success">{fmtBRL(economiaDemissaoAno)}</Hl>.
+                  </li>
+                )}
+                <li>Risco associado: <Hl color="warning">turnover de talentos seniores</Hl>, perda de conhecimento institucional e desmotivação de quem mais entrega.</li>
+                <li>Recomenda-se auditar contratos individuais antes de qualquer ajuste retroativo.</li>
+              </ExecBlock>
+
+              {/* Correlações */}
+              <ExecBlock icon={BarChart3} color="primary" title="Correlações observadas">
+                <li>
+                  Tempo de empresa × produtividade: <strong>r = {corrTempoProd.toFixed(3)}</strong> —{" "}
+                  {Math.abs(corrTempoProd) < 0.15
+                    ? "praticamente nula, veteranos não entregam mais que iniciantes."
+                    : corrTempoProd > 0
+                    ? "mais tempo de casa tende a estar associado a maior produtividade."
+                    : "mais tempo de casa associado a menor produtividade."}
+                </li>
+                <li>
+                  Custo total × produtividade: <strong>r = {corrCustoProd.toFixed(3)}</strong> —{" "}
+                  {corrCustoProd > 0.3
+                    ? "investimento maior se traduz em mais entrega."
+                    : corrCustoProd > 0.1
+                    ? "investimento maior tem retorno parcial em entrega."
+                    : "custos altos não estão pareados a entregas — ineficiência alocativa."}
+                </li>
+              </ExecBlock>
+
+              {/* Recomendações */}
+              <ExecBlock icon={Lightbulb} color="warning" title="Recomendações">
+                {setorMenosProd && (
+                  <li>Revisar headcount e processos em <strong>{setorMenosProd.setor}</strong> e nos demais setores classificados como críticos.</li>
+                )}
+                <li>Padronizar a remuneração de estagiários ao limite de <strong>{fmtBRL(LIMITE_ESTAGIO)}</strong>.</li>
+                {veteranosSubpagos.length > 0 && (
+                  <li>Estruturar plano de equiparação salarial para os <strong>{veteranosSubpagos.length} veteranos subpagos</strong>, priorizando os de maior gap e tempo de casa.</li>
+                )}
+                {setorMaiorCO2 && (
+                  <li>Implementar plano de redução de CO₂ focado em <strong>{setorMaiorCO2.setor}</strong>.</li>
+                )}
+                {setorMelhorCB && (
+                  <li>Replicar boas práticas de <strong>{setorMelhorCB.setor}</strong> nos setores de menor eficiência.</li>
+                )}
+                <li>
+                  Economia anual total projetada combinando reajuste de estagiários e desligamento estruturado:{" "}
+                  <Hl color="success">{fmtBRL(economiaTotalAno)}</Hl>.
+                </li>
+              </ExecBlock>
             </div>
 
             {/* CHECKLIST FINAL DE CONFORMIDADE */}
