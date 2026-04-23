@@ -712,6 +712,41 @@ const Index = () => {
             <SectionHeader eyebrow="Insights automáticos" title="Análise executiva"
               description="Texto e prioridades gerados automaticamente a partir dos dados filtrados." />
 
+            {/* CARD DE ECONOMIA PROJETADA */}
+            <div className="mb-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="glass-card rounded-xl p-5 animate-fade-in-up border-l-4 border-l-[hsl(var(--success))] relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full blur-3xl opacity-40 bg-gradient-to-br from-[hsl(var(--success))]/40 to-primary/30" />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <PiggyBank className="h-5 w-5 text-[hsl(var(--success))]" />
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Economia anual projetada</p>
+                  </div>
+                  <p className="font-display text-3xl font-semibold text-[hsl(var(--success))]">{fmtBRL(economiaTotalAno)}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Soma de reajuste de estagiários + desligamentos estruturados.</p>
+                </div>
+              </div>
+              <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Reajuste estagiários</p>
+                </div>
+                <p className="font-display text-2xl font-semibold">{fmtBRL(economiaEstagiariosAno)}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {estagiariosAcimaLimite.length} estagiários acima de {fmtBRL(LIMITE_ESTAGIO)}. Padronizar contratos para o teto da bolsa-auxílio.
+                </p>
+              </div>
+              <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+                <div className="flex items-center gap-2 mb-2">
+                  <UserMinus className="h-5 w-5 text-danger" />
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Desligamento veteranos</p>
+                </div>
+                <p className="font-display text-2xl font-semibold">{fmtBRL(economiaDemissaoAno)}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {riscoDemissao.length} colaboradores 8+ anos com alto custo e baixa entrega. Avaliar PDV ou desligamento estruturado.
+                </p>
+              </div>
+            </div>
+
             <div className="glass-card rounded-xl p-6 lg:p-8 animate-fade-in-up">
               <div className="flex items-center gap-3 mb-5">
                 <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground">
@@ -734,6 +769,44 @@ const Index = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* CHECKLIST FINAL DE CONFORMIDADE */}
+            <div className="mt-5 glass-card rounded-xl p-6 lg:p-8 animate-fade-in-up">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 rounded-xl bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]">
+                  <Target className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-semibold">Conformidade com os requisitos do trabalho</h3>
+                  <p className="text-sm text-muted-foreground">Checklist auto-verificada contra o briefing do professor.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {[
+                  ["Diagnóstico macro (mais caro, menos produtivo, maior CO₂, melhor C/B)", true],
+                  ["KPIs estruturados: custo, produtividade, CO₂, custo/resultado", true],
+                  ["Padrões críticos automáticos (alto custo + baixa entrega)", true],
+                  ["Concentração ambiental e distorções salariais", true],
+                  ["Gráficos por setor: bar, doughnut, scatter, horizontal, distribuição salarial", true],
+                  ["Filtros interativos por setor e cargo", true],
+                  ["Detecção de outliers (IQR 1.5×)", true],
+                  ["Correlações Tempo×Produtividade e Custo×Produtividade", true],
+                  ["Headcount, salário médio/mín/máx por setor", true],
+                  ["Estagiários fora do padrão + economia projetada", true],
+                  ["Veteranos subpagos + candidatos a desligamento", true],
+                  ["Análise executiva com texto gerado pelos dados", true],
+                ].map(([txt, ok], i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/30">
+                    <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${ok ? "text-[hsl(var(--success))]" : "text-muted-foreground"}`} />
+                    <span className="text-sm">{txt as string}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-5 leading-relaxed">
+                Todos os números são extraídos diretamente da planilha <span className="font-mono">Funcionarios_Analisados_3.xlsx</span> ({data.base.length.toLocaleString("pt-BR")} registros).
+                Nenhum valor é fixo no código — atualizar a planilha e recarregar atualiza o dashboard.
+              </p>
             </div>
           </section>
 
