@@ -563,9 +563,10 @@ const Index = () => {
             <SectionHeader eyebrow="Visualizações" title="Gráficos interativos"
               description="Hover nos pontos e barras para detalhes. Filtros no topo afetam todos os gráficos." />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <ChartCard title="Custo total por setor" subtitle="Ordenado do maior para o menor">
+              <ChartCard title="Custo total por setor" subtitle="Clique em uma barra para filtrar pelo setor">
                 <Bar data={custoData} options={{
                   ...baseOptions,
+                  onClick: onChartClickFactory(orderByCusto.map((s) => s.setor)),
                   plugins: {
                     ...baseOptions.plugins,
                     legend: { display: false },
@@ -582,9 +583,10 @@ const Index = () => {
                   },
                 } as any} />
               </ChartCard>
-              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100">
+              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100 • clique para filtrar">
                 <Bar data={prodData} options={{
                   ...baseOptions,
+                  onClick: onChartClickFactory(orderByProd.map((s) => s.setor)),
                   plugins: {
                     ...baseOptions.plugins,
                     legend: { display: false },
@@ -599,9 +601,10 @@ const Index = () => {
                   },
                 } as any} />
               </ChartCard>
-              <ChartCard title="Headcount por setor" subtitle="Distribuição de colaboradores">
+              <ChartCard title="Headcount por setor" subtitle="Clique numa fatia para filtrar pelo setor">
                 <Doughnut data={headcountData} options={{
                   responsive: true, maintainAspectRatio: false,
+                  onClick: onChartClickFactory(agg.map((s) => s.setor)),
                   plugins: {
                     legend: { position: "right" as const, labels: { color: "rgba(226,232,240,0.85)", font: { size: 11 }, padding: 12, usePointStyle: true, pointStyle: "circle" } },
                     tooltip: {
@@ -638,10 +641,11 @@ const Index = () => {
                   },
                 }} />
               </ChartCard>
-              <ChartCard title="CO₂ total por setor" subtitle="Impacto ambiental acumulado">
+              <ChartCard title="CO₂ total por setor" subtitle="Impacto ambiental acumulado • clique para filtrar">
                 <Bar data={co2Data} options={{
                   ...baseOptions,
                   indexAxis: "y" as const,
+                  onClick: onChartClickFactory([...agg].sort((a, b) => b.co2Total - a.co2Total).map((s) => s.setor)),
                   plugins: {
                     ...baseOptions.plugins,
                     legend: { display: false },
