@@ -46,9 +46,13 @@ const Index = () => {
   const setorMaisCaro = [...agg].sort((a, b) => b.custoTotal - a.custoTotal)[0];
   const setorMenosProd = [...agg].sort((a, b) => a.prodMedia - b.prodMedia)[0];
   const setorMaiorCO2 = [...agg].sort((a, b) => b.co2Total - a.co2Total)[0];
+  // Melhor custo-benefício: menor custo por projeto entregue, EXCLUINDO setores com produtividade
+  // abaixo da média (evita falso positivo de Atendimento que tem custo baixo mas baixa entrega).
+  const prodMediaGeral = mean(filtered.map((r) => r.Produtividade));
   const setorMelhorCB = [...agg]
-    .filter((s) => s.prodMedia > 0)
-    .sort((a, b) => a.custoPorResultado - b.custoPorResultado)[0];
+    .filter((s) => s.prodMedia >= prodMediaGeral && s.projetosTotais > 0)
+    .sort((a, b) => a.custoPorProjeto - b.custoPorProjeto)[0]
+    ?? [...agg].sort((a, b) => a.custoPorResultado - b.custoPorResultado)[0];
 
   // Estagiários e veteranos
   const LIMITE_ESTAGIO = 1500; // referência salarial para estagiário
