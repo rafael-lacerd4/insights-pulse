@@ -52,6 +52,7 @@ export interface Dataset {
   diagnostico: { PERGUNTA: string; SETOR: string; "DADOS E DETALHAMENTO": string }[];
   setores: string[];
   cargos: string[];
+  meta?: { total_funcionarios: number; fonte: string; gerado_em: string };
 }
 
 export async function fetchDataset(): Promise<Dataset> {
