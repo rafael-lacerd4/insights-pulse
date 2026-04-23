@@ -954,10 +954,30 @@ const Index = () => {
           <section id="sustentabilidade" className="scroll-mt-24">
             <SectionHeader eyebrow="ESG" title="Sustentabilidade & desperdício"
               description="Energia, papel, deslocamento e CO₂ por setor — combinados no score composto de desperdício." />
+            <div className="flex justify-end mb-3">
+              <SortMenu
+                value={esgKpiSort}
+                onChange={(v) => setEsgKpiSort(v as any)}
+                options={[
+                  { value: "default", label: "Ordem padrão" },
+                  { value: "energia", label: "Destacar Energia" },
+                  { value: "co2", label: "Destacar CO₂" },
+                  { value: "desperdicio", label: "Destacar Desperdício" },
+                ]}
+              />
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <KpiCard label="Energia média" value={`${fmtNum(mean(filtered.map((r) => r["Consumo Energia kWh"])), 0)} kWh`} icon={Zap} tone="warning" />
-              <KpiCard label="CO₂ médio por func" value={`${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`} icon={Leaf} tone="success" />
-              <KpiCard label="Score desperdício médio" value={fmtNum(mean(filtered.map((r) => r.Score_Desperdicio)), 3)} icon={TrendingUp} tone="danger" />
+              {(() => {
+                const cards = [
+                  { key: "energia", el: <KpiCard key="e" label="Energia média" value={`${fmtNum(mean(filtered.map((r) => r["Consumo Energia kWh"])), 0)} kWh`} icon={Zap} tone="warning" /> },
+                  { key: "co2", el: <KpiCard key="c" label="CO₂ médio por func" value={`${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`} icon={Leaf} tone="success" /> },
+                  { key: "desperdicio", el: <KpiCard key="d" label="Score desperdício médio" value={fmtNum(mean(filtered.map((r) => r.Score_Desperdicio)), 3)} icon={TrendingUp} tone="danger" /> },
+                ];
+                if (esgKpiSort !== "default") {
+                  cards.sort((a, b) => (a.key === esgKpiSort ? -1 : b.key === esgKpiSort ? 1 : 0));
+                }
+                return cards.map((c) => c.el);
+              })()}
             </div>
           </section>
 
