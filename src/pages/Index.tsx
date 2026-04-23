@@ -15,6 +15,7 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { ChartCard } from "@/components/dashboard/ChartCard";
+import { SortMenu } from "@/components/dashboard/SortMenu";
 import "@/components/dashboard/charts";
 import { baseOptions } from "@/components/dashboard/charts";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,25 @@ const Index = () => {
   const [active, setActive] = useState<string>("diagnostico");
   const [setorFiltro, setSetorFiltro] = useState("__all__");
   const [cargoFiltro, setCargoFiltro] = useState("__all__");
+
+  // Ordenação dos KPI cards do topo (Diagnóstico)
+  const [topKpiSort, setTopKpiSort] = useState<"default" | "custo" | "prod" | "co2" | "headcount">("default");
+  // Ordenação dos KPI cards de Sustentabilidade
+  const [esgKpiSort, setEsgKpiSort] = useState<"default" | "energia" | "co2" | "desperdicio">("default");
+  // Ordenação da tabela KPIs por setor
+  const [tableSortKey, setTableSortKey] = useState<
+    "setor" | "headcount" | "custoTotal" | "custoMedio" | "prodMedia" | "custoPorResultado" | "co2Total" | "co2Medio" | "desperdicioMedio"
+  >("custoTotal");
+  const [tableSortDir, setTableSortDir] = useState<"asc" | "desc">("desc");
+  // Ordenação das listas de pessoas
+  const [estagSort, setEstagSort] = useState<"salario" | "excedente" | "nome" | "setor">("salario");
+  const [estagDir, setEstagDir] = useState<"asc" | "desc">("desc");
+  const [vetSort, setVetSort] = useState<"gap" | "tempo" | "salario" | "nome">("gap");
+  const [vetDir, setVetDir] = useState<"asc" | "desc">("desc");
+  const [riscoSort, setRiscoSort] = useState<"score" | "tempo" | "custo" | "prod" | "nome">("score");
+  const [riscoDir, setRiscoDir] = useState<"asc" | "desc">("desc");
+  const [outSort, setOutSort] = useState<"custo" | "prod" | "tempo" | "nome">("custo");
+  const [outDir, setOutDir] = useState<"asc" | "desc">("desc");
 
   const filtered = useMemo(() => {
     if (!data) return [] as Funcionario[];
@@ -367,31 +387,32 @@ const Index = () => {
               description={`Snapshot dos ${headcount.toLocaleString("pt-BR")} colaboradores filtrados, distribuídos em ${agg.length} setor(es).`}
             />
 
+            <div className="flex justify-end mb-3">
+              <SortMenu
+                value={topKpiSort}
+                onChange={(v) => setTopKpiSort(v as any)}
+                options={[
+                  { value: "default", label: "Ordem padrão" },
+                  { value: "custo", label: "Destacar Custo" },
+                  { value: "prod", label: "Destacar Produtividade" },
+                  { value: "co2", label: "Destacar CO₂" },
+                  { value: "headcount", label: "Destacar Headcount" },
+                ]}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <KpiCard
-                label="Custo Total"
-                value={fmtBRL(totalCusto)}
-                hint={`Custo médio por func: ${fmtBRL(totalCusto / Math.max(headcount, 1))}`}
-                icon={DollarSign} tone="primary" delay={0}
-              />
-              <KpiCard
-                label="Produtividade média"
-                value={`${fmtNum(prodMedia, 1)} pts`}
-                hint={`Empresa: ${fmtNum(mean(data.base.map((r) => r.Produtividade)), 1)} pts`}
-                icon={Activity} tone="success" delay={50}
-              />
-              <KpiCard
-                label="CO₂ Total"
-                value={`${fmtNum(totalCO2, 0)} kg`}
-                hint={`Médio por func: ${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`}
-                icon={Leaf} tone="warning" delay={100}
-              />
-              <KpiCard
-                label="Headcount"
-                value={headcount.toLocaleString("pt-BR")}
-                hint={`${estagiariosAcimaLimite.length} estagiários acima do limite • ${veteranosSubpagos.length} veteranos subpagos`}
-                icon={Users} tone="default" delay={150}
-              />
+              {(() => {
+                const cards = [
+                  { key: "custo", el: <KpiCard key="c" label="Custo Total" value={fmtBRL(totalCusto)} hint={`Custo médio por func: ${fmtBRL(totalCusto / Math.max(headcount, 1))}`} icon={DollarSign} tone="primary" /> },
+                  { key: "prod", el: <KpiCard key="p" label="Produtividade média" value={`${fmtNum(prodMedia, 1)} pts`} hint={`Empresa: ${fmtNum(mean(data.base.map((r) => r.Produtividade)), 1)} pts`} icon={Activity} tone="success" /> },
+                  { key: "co2", el: <KpiCard key="o" label="CO₂ Total" value={`${fmtNum(totalCO2, 0)} kg`} hint={`Médio por func: ${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`} icon={Leaf} tone="warning" /> },
+                  { key: "headcount", el: <KpiCard key="h" label="Headcount" value={headcount.toLocaleString("pt-BR")} hint={`${estagiariosAcimaLimite.length} estagiários acima do limite • ${veteranosSubpagos.length} veteranos subpagos`} icon={Users} tone="default" /> },
+                ];
+                if (topKpiSort !== "default") {
+                  cards.sort((a, b) => (a.key === topKpiSort ? -1 : b.key === topKpiSort ? 1 : 0));
+                }
+                return cards.map((c) => c.el);
+              })()}
             </div>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -419,17 +440,69 @@ const Index = () => {
             <SectionHeader eyebrow="Indicadores" title="KPIs por setor"
               description="Tabela detalhada com custo, produtividade, CO₂ e desperdício para cada setor filtrado." />
             <div className="glass-card rounded-xl overflow-hidden animate-fade-in-up">
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-secondary/30">
+                <p className="text-xs text-muted-foreground">
+                  Clique nos cabeçalhos para ordenar • {agg.length} setor(es)
+                </p>
+                <SortMenu
+                  value={tableSortKey}
+                  direction={tableSortDir}
+                  onDirectionChange={setTableSortDir}
+                  onChange={(v) => setTableSortKey(v as any)}
+                  options={[
+                    { value: "setor", label: "Setor (A–Z)" },
+                    { value: "headcount", label: "Headcount" },
+                    { value: "custoTotal", label: "Custo Total" },
+                    { value: "custoMedio", label: "Custo Médio" },
+                    { value: "prodMedia", label: "Produtividade" },
+                    { value: "custoPorResultado", label: "Custo / Resultado" },
+                    { value: "co2Total", label: "CO₂ Total" },
+                    { value: "co2Medio", label: "CO₂ Médio" },
+                    { value: "desperdicioMedio", label: "Desperdício" },
+                  ]}
+                />
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-xs uppercase tracking-wider text-muted-foreground bg-secondary/50">
                     <tr>
-                      {["Setor","Headcount","Custo Total","Custo Médio","Produtividade","Custo/Resultado","CO₂ Total","CO₂ Médio","Desperdício"].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
-                      ))}
+                      {([
+                        ["setor", "Setor"],
+                        ["headcount", "Headcount"],
+                        ["custoTotal", "Custo Total"],
+                        ["custoMedio", "Custo Médio"],
+                        ["prodMedia", "Produtividade"],
+                        ["custoPorResultado", "Custo/Resultado"],
+                        ["co2Total", "CO₂ Total"],
+                        ["co2Medio", "CO₂ Médio"],
+                        ["desperdicioMedio", "Desperdício"],
+                      ] as const).map(([key, h]) => {
+                        const active = tableSortKey === key;
+                        return (
+                          <th
+                            key={key}
+                            onClick={() => {
+                              if (active) setTableSortDir(tableSortDir === "asc" ? "desc" : "asc");
+                              else { setTableSortKey(key as any); setTableSortDir(key === "setor" ? "asc" : "desc"); }
+                            }}
+                            className={`text-left px-4 py-3 font-medium cursor-pointer select-none hover:text-foreground transition-colors ${active ? "text-foreground" : ""}`}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              {h}
+                              {active && <span className="text-[10px] opacity-70">{tableSortDir === "desc" ? "↓" : "↑"}</span>}
+                            </span>
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
-                    {[...agg].sort((a, b) => b.custoTotal - a.custoTotal).map((s) => (
+                    {[...agg].sort((a, b) => {
+                      const k = tableSortKey;
+                      const dir = tableSortDir === "asc" ? 1 : -1;
+                      if (k === "setor") return a.setor.localeCompare(b.setor) * dir;
+                      return ((a as any)[k] - (b as any)[k]) * dir;
+                    }).map((s) => (
                       <tr key={s.setor} className="border-t border-border hover:bg-secondary/30 transition-colors">
                         <td className="px-4 py-3 font-medium">
                           <div className="flex items-center gap-2">
@@ -589,12 +662,24 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* ESTAGIÁRIOS ACIMA DO LIMITE */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-danger/15 text-danger"><GraduationCap className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Estagiários com salário acima do limite</h3>
                     <p className="text-xs text-muted-foreground">Limite de referência: {fmtBRL(LIMITE_ESTAGIO)}</p>
                   </div>
+                  <SortMenu
+                    value={estagSort}
+                    direction={estagDir}
+                    onDirectionChange={setEstagDir}
+                    onChange={(v) => setEstagSort(v as any)}
+                    options={[
+                      { value: "salario", label: "Salário" },
+                      { value: "excedente", label: "Excedente vs limite" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                      { value: "setor", label: "Setor" },
+                    ]}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="rounded-lg bg-secondary/40 border border-border p-3">
@@ -607,7 +692,13 @@ const Index = () => {
                   </div>
                 </div>
                 <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
-                  {estagiariosAcimaLimite.slice(0, 14).map((r, i) => (
+                  {[...estagiariosAcimaLimite].sort((a, b) => {
+                    const dir = estagDir === "asc" ? 1 : -1;
+                    if (estagSort === "salario") return (a["Salario Base"] - b["Salario Base"]) * dir;
+                    if (estagSort === "excedente") return ((a["Salario Base"] - LIMITE_ESTAGIO) - (b["Salario Base"] - LIMITE_ESTAGIO)) * dir;
+                    if (estagSort === "nome") return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                    return a.Setor.localeCompare(b.Setor) * dir;
+                  }).slice(0, 14).map((r, i) => (
                     <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
                       <div className="flex items-center gap-2 min-w-0">
                         <AlertTriangle className="h-3.5 w-3.5 text-danger shrink-0" />
@@ -628,12 +719,24 @@ const Index = () => {
 
               {/* VETERANOS SUBPAGOS */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-warning/15 text-warning"><Clock className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Veteranos subpagos</h3>
                     <p className="text-xs text-muted-foreground">≥ 5 anos de casa recebendo abaixo da mediana do próprio cargo</p>
                   </div>
+                  <SortMenu
+                    value={vetSort}
+                    direction={vetDir}
+                    onDirectionChange={setVetDir}
+                    onChange={(v) => setVetSort(v as any)}
+                    options={[
+                      { value: "gap", label: "Gap salarial" },
+                      { value: "tempo", label: "Tempo de empresa" },
+                      { value: "salario", label: "Salário" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                    ]}
+                  />
                 </div>
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="rounded-lg bg-secondary/40 border border-border p-3">
@@ -652,7 +755,13 @@ const Index = () => {
                   </div>
                 </div>
                 <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
-                  {veteranosSubpagos.slice(0, 14).map((r, i) => (
+                  {[...veteranosSubpagos].sort((a, b) => {
+                    const dir = vetDir === "asc" ? 1 : -1;
+                    if (vetSort === "gap") return (a.gap - b.gap) * dir;
+                    if (vetSort === "tempo") return (a["Tempo Empresa"] - b["Tempo Empresa"]) * dir;
+                    if (vetSort === "salario") return (a["Salario Base"] - b["Salario Base"]) * dir;
+                    return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                  }).slice(0, 14).map((r, i) => (
                     <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
                       <span className="text-xs font-mono text-muted-foreground w-12 shrink-0">{fmtNum(r["Tempo Empresa"], 1)}a</span>
                       <div className="min-w-0 flex-1">
@@ -676,15 +785,35 @@ const Index = () => {
             {/* CANDIDATOS A DESLIGAMENTO + OUTLIERS */}
             <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div className="glass-card rounded-xl p-5 animate-fade-in-up border-l-4 border-l-danger">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-danger/15 text-danger"><UserMinus className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Candidatos a desligamento ({riscoDemissao.length})</h3>
                     <p className="text-xs text-muted-foreground">≥ 8 anos de casa + custo acima da média + produtividade abaixo da média</p>
                   </div>
+                  <SortMenu
+                    value={riscoSort}
+                    direction={riscoDir}
+                    onDirectionChange={setRiscoDir}
+                    onChange={(v) => setRiscoSort(v as any)}
+                    options={[
+                      { value: "score", label: "Score de risco" },
+                      { value: "tempo", label: "Tempo de empresa" },
+                      { value: "custo", label: "Custo total" },
+                      { value: "prod", label: "Produtividade" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                    ]}
+                  />
                 </div>
                 <ul className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
-                  {riscoDemissao.slice(0, 12).map((r, i) => (
+                  {[...riscoDemissao].sort((a, b) => {
+                    const dir = riscoDir === "asc" ? 1 : -1;
+                    if (riscoSort === "score") return (a.scoreRisco - b.scoreRisco) * dir;
+                    if (riscoSort === "tempo") return (a["Tempo Empresa"] - b["Tempo Empresa"]) * dir;
+                    if (riscoSort === "custo") return (a["Custo Total"] - b["Custo Total"]) * dir;
+                    if (riscoSort === "prod") return (a.Produtividade - b.Produtividade) * dir;
+                    return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                  }).slice(0, 12).map((r, i) => (
                     <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-danger/5 hover:bg-danger/10 transition-colors">
                       <ShieldAlert className="h-4 w-4 text-danger shrink-0" />
                       <div className="min-w-0 flex-1">
@@ -704,14 +833,35 @@ const Index = () => {
               </div>
 
               <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-primary/15 text-primary"><AlertTriangle className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Outliers de custo ({outliersCusto.length})</h3>
                     <p className="text-xs text-muted-foreground">Detectado por IQR 1.5× — auditar horas extras, adicionais e benefícios</p>
                   </div>
+                  <SortMenu
+                    value={outSort}
+                    direction={outDir}
+                    onDirectionChange={setOutDir}
+                    onChange={(v) => setOutSort(v as any)}
+                    options={[
+                      { value: "custo", label: "Custo total" },
+                      { value: "prod", label: "Produtividade" },
+                      { value: "tempo", label: "Tempo de empresa" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                    ]}
+                  />
                 </div>
-                <PersonList rows={outliersCusto} metric={(r) => fmtBRL(r["Custo Total"])} />
+                <PersonList
+                  rows={[...outliersCusto].sort((a, b) => {
+                    const dir = outDir === "asc" ? 1 : -1;
+                    if (outSort === "custo") return (a["Custo Total"] - b["Custo Total"]) * dir;
+                    if (outSort === "prod") return (a.Produtividade - b.Produtividade) * dir;
+                    if (outSort === "tempo") return (a["Tempo Empresa"] - b["Tempo Empresa"]) * dir;
+                    return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                  })}
+                  metric={(r) => fmtBRL(r["Custo Total"])}
+                />
               </div>
             </div>
 
@@ -804,10 +954,30 @@ const Index = () => {
           <section id="sustentabilidade" className="scroll-mt-24">
             <SectionHeader eyebrow="ESG" title="Sustentabilidade & desperdício"
               description="Energia, papel, deslocamento e CO₂ por setor — combinados no score composto de desperdício." />
+            <div className="flex justify-end mb-3">
+              <SortMenu
+                value={esgKpiSort}
+                onChange={(v) => setEsgKpiSort(v as any)}
+                options={[
+                  { value: "default", label: "Ordem padrão" },
+                  { value: "energia", label: "Destacar Energia" },
+                  { value: "co2", label: "Destacar CO₂" },
+                  { value: "desperdicio", label: "Destacar Desperdício" },
+                ]}
+              />
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <KpiCard label="Energia média" value={`${fmtNum(mean(filtered.map((r) => r["Consumo Energia kWh"])), 0)} kWh`} icon={Zap} tone="warning" />
-              <KpiCard label="CO₂ médio por func" value={`${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`} icon={Leaf} tone="success" />
-              <KpiCard label="Score desperdício médio" value={fmtNum(mean(filtered.map((r) => r.Score_Desperdicio)), 3)} icon={TrendingUp} tone="danger" />
+              {(() => {
+                const cards = [
+                  { key: "energia", el: <KpiCard key="e" label="Energia média" value={`${fmtNum(mean(filtered.map((r) => r["Consumo Energia kWh"])), 0)} kWh`} icon={Zap} tone="warning" /> },
+                  { key: "co2", el: <KpiCard key="c" label="CO₂ médio por func" value={`${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`} icon={Leaf} tone="success" /> },
+                  { key: "desperdicio", el: <KpiCard key="d" label="Score desperdício médio" value={fmtNum(mean(filtered.map((r) => r.Score_Desperdicio)), 3)} icon={TrendingUp} tone="danger" /> },
+                ];
+                if (esgKpiSort !== "default") {
+                  cards.sort((a, b) => (a.key === esgKpiSort ? -1 : b.key === esgKpiSort ? 1 : 0));
+                }
+                return cards.map((c) => c.el);
+              })()}
             </div>
           </section>
 
