@@ -67,12 +67,13 @@ const Index = () => {
   const setorMaisCaro = [...agg].sort((a, b) => b.custoTotal - a.custoTotal)[0];
   const setorMenosProd = [...agg].sort((a, b) => a.prodMedia - b.prodMedia)[0];
   const setorMaiorCO2 = [...agg].sort((a, b) => b.co2Total - a.co2Total)[0];
-  // Melhor custo-benefício: menor custo por projeto entregue, EXCLUINDO setores com produtividade
-  // abaixo da média (evita falso positivo de Atendimento que tem custo baixo mas baixa entrega).
-  const prodMediaGeral = mean(filtered.map((r) => r.Produtividade));
+  // Melhor custo-benefício: maior eficiência composta (produtividade entregue por R$ investido).
+  // Métrica = produtividade média / custo médio (pts por R$ 1.000). Premia quem entrega mais
+  // por real gasto, sem excluir setores arbitrariamente.
   const setorMelhorCB = [...agg]
-    .filter((s) => s.prodMedia >= prodMediaGeral && s.projetosTotais > 0)
-    .sort((a, b) => a.custoPorProjeto - b.custoPorProjeto)[0]
+    .filter((s) => s.custoMedio > 0 && s.projetosTotais > 0)
+    .map((s) => ({ ...s, eficiencia: (s.prodMedia / s.custoMedio) * 1000 }))
+    .sort((a, b) => b.eficiencia - a.eficiencia)[0]
     ?? [...agg].sort((a, b) => a.custoPorResultado - b.custoPorResultado)[0];
 
   // Estagiários e veteranos
