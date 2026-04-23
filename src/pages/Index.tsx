@@ -274,19 +274,14 @@ const Index = () => {
   };
 
   // Insights executivos automatizados
-  const insights = buildInsights({
-    setorMaisCaro, setorMenosProd, setorMaiorCO2, setorMelhorCB,
-    corrTempoProd, corrCustoProd,
-    estagiariosCount: estagiariosAcimaLimite.length,
-    desperdicioEstagiarios,
-    veteranosSubpagosCount: veteranosSubpagos.length,
-    gapMensalTotal,
-    riscoDemissaoCount: riscoDemissao.length,
-    outliersCount: outliersCusto.length,
-    totalCusto, totalCO2, prodMedia, headcount,
-    economiaEstagiariosAno, economiaDemissaoAno, economiaTotalAno,
-    aggAll,
-  });
+  const tempoMedioVet = mean(veteranos.map((v) => v["Tempo Empresa"])) || 0;
+  const topVeteranos = veteranosSubpagos.slice(0, 3);
+  // Setores que combinam custo acima da média e produtividade abaixo da média
+  const custoMedioSetor = mean(agg.map((s) => s.custoTotal));
+  const prodMediaSetor = mean(agg.map((s) => s.prodMedia));
+  const setoresAltoCustoBaixaProd = agg
+    .filter((s) => s.custoTotal > custoMedioSetor && s.prodMedia < prodMediaSetor)
+    .map((s) => s.setor);
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
