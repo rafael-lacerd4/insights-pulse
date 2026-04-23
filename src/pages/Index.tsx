@@ -243,8 +243,11 @@ const Index = () => {
   const insights = buildInsights({
     setorMaisCaro, setorMenosProd, setorMaiorCO2, setorMelhorCB,
     corrTempoProd, corrCustoProd,
-    estagiariosCount: estagiarios.length,
+    estagiariosCount: estagiariosAcimaLimite.length,
+    desperdicioEstagiarios,
     veteranosSubpagosCount: veteranosSubpagos.length,
+    gapMensalTotal,
+    riscoDemissaoCount: riscoDemissao.length,
     outliersCount: outliersCusto.length,
     totalCusto, totalCO2, prodMedia, headcount,
     aggAll,
