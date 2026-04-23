@@ -832,14 +832,35 @@ const Index = () => {
               </div>
 
               <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-primary/15 text-primary"><AlertTriangle className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Outliers de custo ({outliersCusto.length})</h3>
                     <p className="text-xs text-muted-foreground">Detectado por IQR 1.5× — auditar horas extras, adicionais e benefícios</p>
                   </div>
+                  <SortMenu
+                    value={outSort}
+                    direction={outDir}
+                    onDirectionChange={setOutDir}
+                    onChange={(v) => setOutSort(v as any)}
+                    options={[
+                      { value: "custo", label: "Custo total" },
+                      { value: "prod", label: "Produtividade" },
+                      { value: "tempo", label: "Tempo de empresa" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                    ]}
+                  />
                 </div>
-                <PersonList rows={outliersCusto} metric={(r) => fmtBRL(r["Custo Total"])} />
+                <PersonList
+                  rows={[...outliersCusto].sort((a, b) => {
+                    const dir = outDir === "asc" ? 1 : -1;
+                    if (outSort === "custo") return (a["Custo Total"] - b["Custo Total"]) * dir;
+                    if (outSort === "prod") return (a.Produtividade - b.Produtividade) * dir;
+                    if (outSort === "tempo") return (a["Tempo Empresa"] - b["Tempo Empresa"]) * dir;
+                    return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                  })}
+                  metric={(r) => fmtBRL(r["Custo Total"])}
+                />
               </div>
             </div>
 
