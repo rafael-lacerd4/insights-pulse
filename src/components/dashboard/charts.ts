@@ -6,6 +6,10 @@ import {
   PointElement,
   LineElement,
   ArcElement,
+  LineController,
+  BarController,
+  DoughnutController,
+  ScatterController,
   Title,
   Tooltip,
   Legend,
@@ -14,7 +18,8 @@ import {
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement, PointElement, LineElement,
-  ArcElement, Title, Tooltip, Legend, Filler
+  ArcElement, Title, Tooltip, Legend, Filler,
+  LineController, BarController, DoughnutController, ScatterController
 );
 
 export const chartTheme = {
