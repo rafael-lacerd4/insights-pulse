@@ -15,6 +15,7 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { SectionHeader } from "@/components/dashboard/SectionHeader";
 import { ChartCard } from "@/components/dashboard/ChartCard";
+import { SortMenu } from "@/components/dashboard/SortMenu";
 import "@/components/dashboard/charts";
 import { baseOptions } from "@/components/dashboard/charts";
 import { Badge } from "@/components/ui/badge";
