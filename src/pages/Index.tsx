@@ -474,41 +474,109 @@ const Index = () => {
               description="Hover nos pontos e barras para detalhes. Filtros no topo afetam todos os gráficos." />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <ChartCard title="Custo total por setor" subtitle="Ordenado do maior para o menor">
-                <Bar data={custoData} options={{ ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }} />
-              </ChartCard>
-              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100">
-                <Bar data={prodData} options={{ ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }} />
-              </ChartCard>
-              <ChartCard title="Headcount por setor" subtitle="Distribuição de colaboradores">
-                <Doughnut data={headcountData} options={{
-                  responsive: true, maintainAspectRatio: false,
-                  plugins: { legend: { position: "right", labels: { color: "rgba(226,232,240,0.85)", font: { size: 11 } } } },
-                  cutout: "62%",
-                }} />
-              </ChartCard>
-              <ChartCard title="Custo vs Produtividade" subtitle="Cada ponto = um colaborador. Clusters revelam ineficiência.">
-                <Scatter data={scatterData} options={{
+                <Bar data={custoData} options={{
                   ...baseOptions,
                   plugins: {
                     ...baseOptions.plugins,
+                    legend: { display: false },
                     tooltip: {
                       ...baseOptions.plugins.tooltip,
                       callbacks: {
-                        label: (ctx: any) => `${ctx.dataset.label}: ${fmtBRL(ctx.parsed.x)} • ${fmtNum(ctx.parsed.y, 0)} pts`,
+                        label: (ctx: any) => `${fmtBRL(ctx.parsed.y)} (${fmtNum((ctx.parsed.y / totalCusto) * 100, 1)}% do total)`,
                       },
                     },
                   },
                   scales: {
-                    x: { ...baseOptions.scales.x, title: { display: true, text: "Custo Total mensal (R$)", color: "rgba(148,163,184,0.7)" } },
+                    ...baseOptions.scales,
+                    y: { ...baseOptions.scales.y, ticks: { ...baseOptions.scales.y.ticks, callback: (v: any) => `R$ ${(v / 1000).toFixed(0)}k` } },
+                  },
+                } as any} />
+              </ChartCard>
+              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100">
+                <Bar data={prodData} options={{
+                  ...baseOptions,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: { label: (ctx: any) => `${fmtNum(ctx.parsed.y, 1)} pts` },
+                    },
+                  },
+                  scales: {
+                    ...baseOptions.scales,
+                    y: { ...baseOptions.scales.y, beginAtZero: true, max: 100 },
+                  },
+                } as any} />
+              </ChartCard>
+              <ChartCard title="Headcount por setor" subtitle="Distribuição de colaboradores">
+                <Doughnut data={headcountData} options={{
+                  responsive: true, maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: "right" as const, labels: { color: "rgba(226,232,240,0.85)", font: { size: 11 }, padding: 12, usePointStyle: true, pointStyle: "circle" } },
+                    tooltip: {
+                      backgroundColor: "rgba(15, 23, 42, 0.95)", padding: 12, cornerRadius: 10,
+                      callbacks: {
+                        label: (ctx: any) => ` ${ctx.label}: ${ctx.parsed} func (${fmtNum((ctx.parsed / headcount) * 100, 1)}%)`,
+                      },
+                    },
+                  },
+                  cutout: "65%",
+                } as any} />
+              </ChartCard>
+              <ChartCard title="Custo vs Produtividade" subtitle="Quadrante inferior-direito (alto custo, baixa entrega) = ineficiência">
+                <Scatter data={scatterData} options={{
+                  ...baseOptions,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    legend: { ...baseOptions.plugins.legend, position: "bottom" as const, labels: { ...baseOptions.plugins.legend.labels, usePointStyle: true, pointStyle: "circle", padding: 10 } },
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: {
+                        title: (items: any[]) => items[0]?.raw?.nome ?? "",
+                        label: (ctx: any) => [
+                          `${ctx.raw.cargo} · ${ctx.dataset.label}`,
+                          `Custo: ${fmtBRL(ctx.parsed.x)}`,
+                          `Produtividade: ${fmtNum(ctx.parsed.y, 0)} pts`,
+                        ],
+                      },
+                    },
+                  },
+                  scales: {
+                    x: { ...baseOptions.scales.x, title: { display: true, text: "Custo Total mensal (R$)", color: "rgba(148,163,184,0.7)" }, ticks: { ...baseOptions.scales.x.ticks, callback: (v: any) => `R$ ${(v / 1000).toFixed(0)}k` } },
                     y: { ...baseOptions.scales.y, title: { display: true, text: "Produtividade (pts)", color: "rgba(148,163,184,0.7)" } },
                   },
                 }} />
               </ChartCard>
               <ChartCard title="CO₂ total por setor" subtitle="Impacto ambiental acumulado">
-                <Bar data={co2Data} options={{ ...baseOptions, indexAxis: "y" as const, plugins: { ...baseOptions.plugins, legend: { display: false } } }} />
+                <Bar data={co2Data} options={{
+                  ...baseOptions,
+                  indexAxis: "y" as const,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: { label: (ctx: any) => `${fmtNum(ctx.parsed.x, 1)} kg de CO₂` },
+                    },
+                  },
+                } as any} />
               </ChartCard>
               <ChartCard title="Distribuição salarial" subtitle="Mínimo, médio e máximo por setor">
-                <Bar data={salDist} options={baseOptions} />
+                <Bar data={salDist} options={{
+                  ...baseOptions,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${fmtBRL(ctx.parsed.y)}` },
+                    },
+                  },
+                  scales: {
+                    ...baseOptions.scales,
+                    y: { ...baseOptions.scales.y, ticks: { ...baseOptions.scales.y.ticks, callback: (v: any) => `R$ ${(v / 1000).toFixed(0)}k` } },
+                  },
+                } as any} />
               </ChartCard>
             </div>
           </section>
