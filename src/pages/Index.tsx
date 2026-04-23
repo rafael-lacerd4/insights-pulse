@@ -387,31 +387,32 @@ const Index = () => {
               description={`Snapshot dos ${headcount.toLocaleString("pt-BR")} colaboradores filtrados, distribuídos em ${agg.length} setor(es).`}
             />
 
+            <div className="flex justify-end mb-3">
+              <SortMenu
+                value={topKpiSort}
+                onChange={(v) => setTopKpiSort(v as any)}
+                options={[
+                  { value: "default", label: "Ordem padrão" },
+                  { value: "custo", label: "Destacar Custo" },
+                  { value: "prod", label: "Destacar Produtividade" },
+                  { value: "co2", label: "Destacar CO₂" },
+                  { value: "headcount", label: "Destacar Headcount" },
+                ]}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <KpiCard
-                label="Custo Total"
-                value={fmtBRL(totalCusto)}
-                hint={`Custo médio por func: ${fmtBRL(totalCusto / Math.max(headcount, 1))}`}
-                icon={DollarSign} tone="primary" delay={0}
-              />
-              <KpiCard
-                label="Produtividade média"
-                value={`${fmtNum(prodMedia, 1)} pts`}
-                hint={`Empresa: ${fmtNum(mean(data.base.map((r) => r.Produtividade)), 1)} pts`}
-                icon={Activity} tone="success" delay={50}
-              />
-              <KpiCard
-                label="CO₂ Total"
-                value={`${fmtNum(totalCO2, 0)} kg`}
-                hint={`Médio por func: ${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`}
-                icon={Leaf} tone="warning" delay={100}
-              />
-              <KpiCard
-                label="Headcount"
-                value={headcount.toLocaleString("pt-BR")}
-                hint={`${estagiariosAcimaLimite.length} estagiários acima do limite • ${veteranosSubpagos.length} veteranos subpagos`}
-                icon={Users} tone="default" delay={150}
-              />
+              {(() => {
+                const cards = [
+                  { key: "custo", el: <KpiCard key="c" label="Custo Total" value={fmtBRL(totalCusto)} hint={`Custo médio por func: ${fmtBRL(totalCusto / Math.max(headcount, 1))}`} icon={DollarSign} tone="primary" /> },
+                  { key: "prod", el: <KpiCard key="p" label="Produtividade média" value={`${fmtNum(prodMedia, 1)} pts`} hint={`Empresa: ${fmtNum(mean(data.base.map((r) => r.Produtividade)), 1)} pts`} icon={Activity} tone="success" /> },
+                  { key: "co2", el: <KpiCard key="o" label="CO₂ Total" value={`${fmtNum(totalCO2, 0)} kg`} hint={`Médio por func: ${fmtNum(totalCO2 / Math.max(headcount, 1), 1)} kg`} icon={Leaf} tone="warning" /> },
+                  { key: "headcount", el: <KpiCard key="h" label="Headcount" value={headcount.toLocaleString("pt-BR")} hint={`${estagiariosAcimaLimite.length} estagiários acima do limite • ${veteranosSubpagos.length} veteranos subpagos`} icon={Users} tone="default" /> },
+                ];
+                if (topKpiSort !== "default") {
+                  cards.sort((a, b) => (a.key === topKpiSort ? -1 : b.key === topKpiSort ? 1 : 0));
+                }
+                return cards.map((c) => c.el);
+              })()}
             </div>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
