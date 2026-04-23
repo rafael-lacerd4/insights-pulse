@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import { Bar, Doughnut, Scatter, Line } from "react-chartjs-2";
 import {
   DollarSign, Activity, Leaf, Award, AlertTriangle, Users, Sparkles,
-  TrendingDown, TrendingUp, Briefcase, GraduationCap, Clock, Zap,
+  TrendingDown, TrendingUp, Briefcase, GraduationCap, Clock, Zap, UserMinus, ShieldAlert,
 } from "lucide-react";
 import { useDataset } from "@/hooks/useDataset";
 import {
-  aggregateBySetor, fmtBRL, fmtNum, mean, sum, pearson, outliers,
+  aggregateBySetor, fmtBRL, fmtNum, mean, sum, median, pearson, outliers,
   colorFor, type Funcionario,
 } from "@/lib/dataset";
 import { Sidebar, SECTIONS } from "@/components/dashboard/Sidebar";
