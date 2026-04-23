@@ -453,9 +453,18 @@ const Index = () => {
               <ChartCard title="Custo vs Produtividade" subtitle="Cada ponto = um colaborador. Clusters revelam ineficiência.">
                 <Scatter data={scatterData} options={{
                   ...baseOptions,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: {
+                        label: (ctx: any) => `${ctx.dataset.label}: ${fmtBRL(ctx.parsed.x)} • ${fmtNum(ctx.parsed.y, 0)} pts`,
+                      },
+                    },
+                  },
                   scales: {
-                    x: { ...baseOptions.scales.x, title: { display: true, text: "Custo Total (R$)", color: "rgba(148,163,184,0.7)" } },
-                    y: { ...baseOptions.scales.y, title: { display: true, text: "Produtividade", color: "rgba(148,163,184,0.7)" } },
+                    x: { ...baseOptions.scales.x, title: { display: true, text: "Custo Total mensal (R$)", color: "rgba(148,163,184,0.7)" } },
+                    y: { ...baseOptions.scales.y, title: { display: true, text: "Produtividade (pts)", color: "rgba(148,163,184,0.7)" } },
                   },
                 }} />
               </ChartCard>
