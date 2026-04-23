@@ -442,7 +442,7 @@ const Index = () => {
             <div className="glass-card rounded-xl overflow-hidden animate-fade-in-up">
               <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-secondary/30">
                 <p className="text-xs text-muted-foreground">
-                  Clique nos cabeçalhos para ordenar • {agg.length} setor(es)
+                  <span className="text-foreground font-medium">{agg.length}</span> setor(es) • clique no cabeçalho para ordenar • clique numa linha para filtrar
                 </p>
                 <SortMenu
                   value={tableSortKey}
@@ -464,7 +464,7 @@ const Index = () => {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="text-xs uppercase tracking-wider text-muted-foreground bg-secondary/50">
+                  <thead className="sticky top-0 z-10 text-[11px] uppercase tracking-[0.12em] text-muted-foreground bg-secondary/70 backdrop-blur">
                     <tr>
                       {([
                         ["setor", "Setor"],
@@ -485,11 +485,11 @@ const Index = () => {
                               if (active) setTableSortDir(tableSortDir === "asc" ? "desc" : "asc");
                               else { setTableSortKey(key as any); setTableSortDir(key === "setor" ? "asc" : "desc"); }
                             }}
-                            className={`text-left px-4 py-3 font-medium cursor-pointer select-none hover:text-foreground transition-colors ${active ? "text-foreground" : ""}`}
+                            className={`text-left px-4 py-3 font-semibold cursor-pointer select-none hover:text-foreground transition-colors border-b border-border ${active ? "text-primary" : ""}`}
                           >
                             <span className="inline-flex items-center gap-1">
                               {h}
-                              {active && <span className="text-[10px] opacity-70">{tableSortDir === "desc" ? "↓" : "↑"}</span>}
+                              {active && <span className="text-[10px]">{tableSortDir === "desc" ? "▼" : "▲"}</span>}
                             </span>
                           </th>
                         );
@@ -502,21 +502,27 @@ const Index = () => {
                       const dir = tableSortDir === "asc" ? 1 : -1;
                       if (k === "setor") return a.setor.localeCompare(b.setor) * dir;
                       return ((a as any)[k] - (b as any)[k]) * dir;
-                    }).map((s) => (
-                      <tr key={s.setor} className="border-t border-border hover:bg-secondary/30 transition-colors">
+                    }).map((s, idx) => {
+                      const isFiltered = setorFiltro === s.setor;
+                      return (
+                      <tr
+                        key={s.setor}
+                        onClick={() => setSetorFiltro(isFiltered ? "__all__" : s.setor)}
+                        className={`row-hover cursor-pointer border-t border-border/60 ${idx % 2 === 1 ? "bg-secondary/10" : ""} ${isFiltered ? "bg-primary/10 shadow-[inset_3px_0_0_hsl(var(--primary))]" : ""}`}
+                      >
                         <td className="px-4 py-3 font-medium">
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colorFor(s.setor) }} />
-                            {s.setor}
+                          <div className="flex items-center gap-2.5">
+                            <span className="h-2.5 w-2.5 rounded-full ring-2 ring-background" style={{ backgroundColor: colorFor(s.setor), boxShadow: `0 0 12px ${colorFor(s.setor)}80` }} />
+                            <span className={isFiltered ? "text-primary" : ""}>{s.setor}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{s.headcount}</td>
-                        <td className="px-4 py-3 font-mono">{fmtBRL(s.custoTotal)}</td>
+                        <td className="px-4 py-3 font-mono tabular-nums">{fmtBRL(s.custoTotal)}</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{fmtBRL(s.custoMedio)}</td>
                         <td className="px-4 py-3">
                           <ProdBar value={s.prodMedia} />
                         </td>
-                        <td className="px-4 py-3 font-mono">{fmtBRL(s.custoPorResultado)}</td>
+                        <td className="px-4 py-3 font-mono tabular-nums">{fmtBRL(s.custoPorResultado)}</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{fmtNum(s.co2Total, 0)} kg</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{fmtNum(s.co2Medio, 1)} kg</td>
                         <td className="px-4 py-3">
