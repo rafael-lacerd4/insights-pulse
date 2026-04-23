@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Bar, Doughnut, Scatter, Line } from "react-chartjs-2";
 import {
   DollarSign, Activity, Leaf, Award, AlertTriangle, Users, Sparkles,
@@ -1017,13 +1017,13 @@ const bgColorClasses = {
   primary: "bg-primary/15 text-primary",
 } as const;
 
-const Hl = ({ color, children }: { color: keyof typeof colorClasses; children: React.ReactNode }) => (
+const Hl = ({ color, children }: { color: keyof typeof colorClasses; children: ReactNode }) => (
   <strong className={colorClasses[color]}>{children}</strong>
 );
 
 const ExecBlock = ({
   icon: Icon, color, title, children,
-}: { icon: any; color: keyof typeof bgColorClasses; title: string; children: React.ReactNode }) => (
+}: { icon: any; color: keyof typeof bgColorClasses; title: string; children: ReactNode }) => (
   <div className="mt-6">
     <div className="flex items-center gap-2 mb-2.5">
       <span className={`p-1.5 rounded-md ${bgColorClasses[color]}`}>
