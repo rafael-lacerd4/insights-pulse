@@ -67,14 +67,22 @@ const Index = () => {
   const setorMaisCaro = [...agg].sort((a, b) => b.custoTotal - a.custoTotal)[0];
   const setorMenosProd = [...agg].sort((a, b) => a.prodMedia - b.prodMedia)[0];
   const setorMaiorCO2 = [...agg].sort((a, b) => b.co2Total - a.co2Total)[0];
-  // Melhor custo-benefício: maior eficiência composta (produtividade entregue por R$ investido).
-  // Métrica = produtividade média / custo médio (pts por R$ 1.000). Premia quem entrega mais
-  // por real gasto, sem excluir setores arbitrariamente.
+  // Melhor custo-benefício: score balanceado entre produtividade e custo.
+  // Normaliza ambos os eixos (0-1) e tira a média — assim premia quem combina alta entrega
+  // com custo moderado, sem favorecer "barato e ruim" (Atendimento) nem "caro e produtivo" (TI).
+  const _prods = agg.map((s) => s.prodMedia);
+  const _custos = agg.map((s) => s.custoMedio);
+  const _minP = Math.min(..._prods), _maxP = Math.max(..._prods);
+  const _minC = Math.min(..._custos), _maxC = Math.max(..._custos);
+  const _rangeP = _maxP - _minP || 1;
+  const _rangeC = _maxC - _minC || 1;
   const setorMelhorCB = [...agg]
-    .filter((s) => s.custoMedio > 0 && s.projetosTotais > 0)
-    .map((s) => ({ ...s, eficiencia: (s.prodMedia / s.custoMedio) * 1000 }))
-    .sort((a, b) => b.eficiencia - a.eficiencia)[0]
-    ?? [...agg].sort((a, b) => a.custoPorResultado - b.custoPorResultado)[0];
+    .map((s) => {
+      const pNorm = (s.prodMedia - _minP) / _rangeP;
+      const cNorm = 1 - (s.custoMedio - _minC) / _rangeC;
+      return { ...s, cbScore: (pNorm + cNorm) / 2, eficiencia: (s.prodMedia / s.custoMedio) * 1000 };
+    })
+    .sort((a, b) => b.cbScore - a.cbScore)[0];
 
   // Estagiários e veteranos
   const LIMITE_ESTAGIO = 1500; // referência salarial para estagiário
