@@ -661,12 +661,24 @@ const Index = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* ESTAGIÁRIOS ACIMA DO LIMITE */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-danger/15 text-danger"><GraduationCap className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Estagiários com salário acima do limite</h3>
                     <p className="text-xs text-muted-foreground">Limite de referência: {fmtBRL(LIMITE_ESTAGIO)}</p>
                   </div>
+                  <SortMenu
+                    value={estagSort}
+                    direction={estagDir}
+                    onDirectionChange={setEstagDir}
+                    onChange={(v) => setEstagSort(v as any)}
+                    options={[
+                      { value: "salario", label: "Salário" },
+                      { value: "excedente", label: "Excedente vs limite" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                      { value: "setor", label: "Setor" },
+                    ]}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="rounded-lg bg-secondary/40 border border-border p-3">
@@ -679,7 +691,13 @@ const Index = () => {
                   </div>
                 </div>
                 <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
-                  {estagiariosAcimaLimite.slice(0, 14).map((r, i) => (
+                  {[...estagiariosAcimaLimite].sort((a, b) => {
+                    const dir = estagDir === "asc" ? 1 : -1;
+                    if (estagSort === "salario") return (a["Salario Base"] - b["Salario Base"]) * dir;
+                    if (estagSort === "excedente") return ((a["Salario Base"] - LIMITE_ESTAGIO) - (b["Salario Base"] - LIMITE_ESTAGIO)) * dir;
+                    if (estagSort === "nome") return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                    return a.Setor.localeCompare(b.Setor) * dir;
+                  }).slice(0, 14).map((r, i) => (
                     <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
                       <div className="flex items-center gap-2 min-w-0">
                         <AlertTriangle className="h-3.5 w-3.5 text-danger shrink-0" />
