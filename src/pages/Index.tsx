@@ -612,24 +612,71 @@ const Index = () => {
             </div>
 
             <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <ChartCard title="Tempo de empresa vs Produtividade" subtitle={`Correlação Pearson: ${corrTempoProd.toFixed(2)}`}>
-                <Scatter
+              <ChartCard
+                title="Tempo de empresa vs Produtividade"
+                subtitle={`Média por faixa de tempo • Correlação Pearson: ${corrTempoProd.toFixed(2)} ${
+                  Math.abs(corrTempoProd) < 0.15 ? "(praticamente nula)" : corrTempoProd > 0 ? "(positiva)" : "(negativa)"
+                }`}
+              >
+                <Bar
                   data={{
-                    datasets: agg.map((s) => ({
-                      label: s.setor,
-                      data: filtered.filter((r) => r.Setor === s.setor)
-                        .map((r) => ({ x: r["Tempo Empresa"], y: r.Produtividade })),
-                      backgroundColor: colorFor(s.setor) + "cc",
-                      pointRadius: 3,
-                    })),
+                    labels: tempoBins.map((b) => `${b.label} (${b.n})`),
+                    datasets: [
+                      {
+                        type: "bar" as const,
+                        label: "Produtividade média",
+                        data: tempoBins.map((b) => Number(b.media.toFixed(1))),
+                        backgroundColor: tempoBins.map((b) =>
+                          b.media >= 60 ? "rgba(52,211,153,0.75)" : b.media >= 45 ? "rgba(251,191,36,0.75)" : "rgba(248,113,113,0.75)"
+                        ),
+                        borderRadius: 8,
+                        yAxisID: "y",
+                      },
+                      {
+                        type: "line" as const,
+                        label: "Custo médio (R$ mil)",
+                        data: tempoBins.map((b) => Number((b.custoMedio / 1000).toFixed(1))),
+                        borderColor: "rgba(192,132,252,0.95)",
+                        backgroundColor: "rgba(192,132,252,0.2)",
+                        borderWidth: 2.5,
+                        tension: 0.35,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        yAxisID: "y1",
+                      } as any,
+                    ],
                   }}
                   options={{
                     ...baseOptions,
-                    scales: {
-                      x: { ...baseOptions.scales.x, title: { display: true, text: "Tempo de empresa (anos)", color: "rgba(148,163,184,0.7)" } },
-                      y: { ...baseOptions.scales.y, title: { display: true, text: "Produtividade", color: "rgba(148,163,184,0.7)" } },
+                    plugins: {
+                      ...baseOptions.plugins,
+                      tooltip: {
+                        ...baseOptions.plugins.tooltip,
+                        callbacks: {
+                          label: (ctx: any) =>
+                            ctx.dataset.yAxisID === "y1"
+                              ? `Custo médio: R$ ${ctx.parsed.y.toFixed(1)} mil`
+                              : `Produtividade: ${ctx.parsed.y} pts`,
+                        },
+                      },
                     },
-                  }}
+                    scales: {
+                      x: { ...baseOptions.scales.x, title: { display: true, text: "Faixa de tempo de empresa", color: "rgba(148,163,184,0.7)" } },
+                      y: {
+                        ...baseOptions.scales.y,
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: "Produtividade (pts)", color: "rgba(148,163,184,0.7)" },
+                      },
+                      y1: {
+                        position: "right" as const,
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: { color: "rgba(192,132,252,0.85)", font: { family: "Inter", size: 11 } },
+                        title: { display: true, text: "Custo médio (R$ mil)", color: "rgba(192,132,252,0.85)" },
+                      },
+                    },
+                  } as any}
                 />
               </ChartCard>
               <ChartCard title="Ranking de eficiência" subtitle="Melhor custo por resultado = mais eficiente">
