@@ -433,40 +433,131 @@ const Index = () => {
           {/* ===================== PESSOAS ===================== */}
           <section id="pessoas" className="scroll-mt-24">
             <SectionHeader eyebrow="Capital humano" title="Estagiários, veteranos e outliers"
-              description="Análise de quem está nos extremos: novos talentos em desenvolvimento e profissionais com longa casa potencialmente subpagos." />
+              description="Distorções salariais em estagiários, veteranos subpagos e candidatos a desligamento por baixa entrega + alto custo." />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* ESTAGIÁRIOS ACIMA DO LIMITE */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-primary/15 text-primary"><GraduationCap className="h-5 w-5" /></div>
+                  <div className="p-2 rounded-lg bg-danger/15 text-danger"><GraduationCap className="h-5 w-5" /></div>
                   <div>
-                    <h3 className="font-display font-semibold">Estagiários ({estagiarios.length})</h3>
-                    <p className="text-xs text-muted-foreground">Salário médio: {fmtBRL(mean(estagiarios.map((e) => e["Salario Base"])) || 0)}</p>
+                    <h3 className="font-display font-semibold">Estagiários com salário acima do limite</h3>
+                    <p className="text-xs text-muted-foreground">Limite de referência: {fmtBRL(LIMITE_ESTAGIO)}</p>
                   </div>
                 </div>
-                <PersonList rows={estagiarios.slice(0, 6)} metric={(r) => `${fmtNum(r.Produtividade, 0)} pts`} />
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Casos</p>
+                    <p className="font-display text-2xl text-primary mt-1">{estagiariosAcimaLimite.length}</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Desperdício / ano</p>
+                    <p className="font-display text-2xl text-primary mt-1">{fmtBRL(desperdicioEstagiarios)}</p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+                  {estagiariosAcimaLimite.slice(0, 14).map((r, i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <AlertTriangle className="h-3.5 w-3.5 text-danger shrink-0" />
+                        <p className="text-sm font-medium truncate">{r.Funcionario}</p>
+                        <span className="text-xs text-muted-foreground truncate">· {r.Setor}</span>
+                      </div>
+                      <span className="font-mono text-xs shrink-0">
+                        {fmtBRL(r["Salario Base"])}
+                        <span className="text-danger ml-1">(+{fmtBRL(r["Salario Base"] - LIMITE_ESTAGIO)})</span>
+                      </span>
+                    </li>
+                  ))}
+                  {!estagiariosAcimaLimite.length && (
+                    <li className="text-sm text-muted-foreground py-4 text-center">Nenhum estagiário acima do limite no filtro atual.</li>
+                  )}
+                </ul>
               </div>
 
+              {/* VETERANOS SUBPAGOS */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-warning/15 text-warning"><Clock className="h-5 w-5" /></div>
                   <div>
-                    <h3 className="font-display font-semibold">Veteranos subpagos ({veteranosSubpagos.length})</h3>
-                    <p className="text-xs text-muted-foreground">7+ anos de casa, salário &lt; 85% da média</p>
+                    <h3 className="font-display font-semibold">Veteranos subpagos</h3>
+                    <p className="text-xs text-muted-foreground">≥ 5 anos de casa recebendo abaixo da mediana do próprio cargo</p>
                   </div>
                 </div>
-                <PersonList
-                  rows={veteranosSubpagos.slice(0, 6)}
-                  metric={(r) => `${fmtNum(r["Tempo Empresa"], 1)}a • ${fmtBRL(r["Salario Base"])}`}
-                />
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Casos</p>
+                    <p className="font-display text-2xl text-warning mt-1">{veteranosSubpagos.length}</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Gap mensal</p>
+                    <p className="font-display text-xl text-warning mt-1">{fmtBRL(gapMensalTotal)}</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tempo médio</p>
+                    <p className="font-display text-xl text-warning mt-1">
+                      {fmtNum(mean(veteranos.map((v) => v["Tempo Empresa"])) || 0, 1)}a
+                    </p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+                  {veteranosSubpagos.slice(0, 14).map((r, i) => (
+                    <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
+                      <span className="text-xs font-mono text-muted-foreground w-12 shrink-0">{fmtNum(r["Tempo Empresa"], 1)}a</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{r.Funcionario}
+                          <span className="text-xs text-muted-foreground ml-1.5">· {r.Cargo} · {r.Setor}</span>
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono text-xs">{fmtBRL(r["Salario Base"])}</p>
+                        <p className="text-[10px] text-muted-foreground">mediana {fmtBRL(r.mediana)}</p>
+                      </div>
+                    </li>
+                  ))}
+                  {!veteranosSubpagos.length && (
+                    <li className="text-sm text-muted-foreground py-4 text-center">Nenhum veterano subpago no filtro atual.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            {/* CANDIDATOS A DESLIGAMENTO + OUTLIERS */}
+            <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="glass-card rounded-xl p-5 animate-fade-in-up border-l-4 border-l-danger">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-danger/15 text-danger"><UserMinus className="h-5 w-5" /></div>
+                  <div>
+                    <h3 className="font-display font-semibold">Candidatos a desligamento ({riscoDemissao.length})</h3>
+                    <p className="text-xs text-muted-foreground">≥ 8 anos de casa + custo acima da média + produtividade abaixo da média</p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
+                  {riscoDemissao.slice(0, 12).map((r, i) => (
+                    <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-danger/5 hover:bg-danger/10 transition-colors">
+                      <ShieldAlert className="h-4 w-4 text-danger shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{r.Funcionario}</p>
+                        <p className="text-xs text-muted-foreground truncate">{r.Cargo} · {r.Setor} · {fmtNum(r["Tempo Empresa"], 1)}a</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono text-xs">{fmtBRL(r["Custo Total"])}</p>
+                        <p className="text-[10px] text-muted-foreground">{fmtNum(r.Produtividade, 0)} pts</p>
+                      </div>
+                    </li>
+                  ))}
+                  {!riscoDemissao.length && (
+                    <li className="text-sm text-muted-foreground py-4 text-center">Nenhum colaborador atende aos três critérios simultaneamente.</li>
+                  )}
+                </ul>
               </div>
 
-              <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+              <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-danger/15 text-danger"><AlertTriangle className="h-5 w-5" /></div>
+                  <div className="p-2 rounded-lg bg-primary/15 text-primary"><AlertTriangle className="h-5 w-5" /></div>
                   <div>
                     <h3 className="font-display font-semibold">Outliers de custo ({outliersCusto.length})</h3>
-                    <p className="text-xs text-muted-foreground">Detectado por IQR (1.5×)</p>
+                    <p className="text-xs text-muted-foreground">Detectado por IQR 1.5× — auditar horas extras, adicionais e benefícios</p>
                   </div>
                 </div>
                 <PersonList rows={outliersCusto} metric={(r) => fmtBRL(r["Custo Total"])} />
