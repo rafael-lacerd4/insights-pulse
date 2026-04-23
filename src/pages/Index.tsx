@@ -1001,9 +1001,43 @@ const PersonList = ({ rows, metric }: { rows: Funcionario[]; metric: (r: Funcion
   );
 };
 
-/* ============= insights builder ============= */
+/* ============= executive blocks ============= */
 
-function buildInsights(p: any) {
+const colorClasses = {
+  danger: "text-danger",
+  warning: "text-warning",
+  success: "text-[hsl(var(--success))]",
+  primary: "text-primary",
+} as const;
+
+const bgColorClasses = {
+  danger: "bg-danger/15 text-danger",
+  warning: "bg-warning/15 text-warning",
+  success: "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]",
+  primary: "bg-primary/15 text-primary",
+} as const;
+
+const Hl = ({ color, children }: { color: keyof typeof colorClasses; children: React.ReactNode }) => (
+  <strong className={colorClasses[color]}>{children}</strong>
+);
+
+const ExecBlock = ({
+  icon: Icon, color, title, children,
+}: { icon: any; color: keyof typeof bgColorClasses; title: string; children: React.ReactNode }) => (
+  <div className="mt-6">
+    <div className="flex items-center gap-2 mb-2.5">
+      <span className={`p-1.5 rounded-md ${bgColorClasses[color]}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <h4 className={`font-display font-semibold text-base ${colorClasses[color]}`}>{title}</h4>
+    </div>
+    <ul className="space-y-2 pl-6 list-disc marker:text-muted-foreground/60 text-sm leading-relaxed text-foreground/90">
+      {children}
+    </ul>
+  </div>
+);
+
+function _legacyInsights(p: any) {
   const partes: string[] = [];
   if (p.setorMaisCaro)
     partes.push(`O setor ${p.setorMaisCaro.setor} concentra o maior custo total (${fmtBRL(p.setorMaisCaro.custoTotal)}, ${fmtNum((p.setorMaisCaro.custoTotal / p.totalCusto) * 100, 1)}% da empresa)`);
