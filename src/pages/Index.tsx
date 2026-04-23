@@ -344,6 +344,16 @@ const Index = () => {
     .filter((s) => s.custoTotal > custoMedioSetor && s.prodMedia < prodMediaSetor)
     .map((s) => s.setor);
 
+  // Cross-filter helpers — clicar em uma barra/fatia define o setor filtrado
+  const handleSectorClick = (setor?: string) => {
+    if (!setor) return;
+    setSetorFiltro(setorFiltro === setor ? "__all__" : setor);
+  };
+  const onChartClickFactory = (labels: string[]) => (_evt: any, els: any[]) => {
+    if (!els?.length) return;
+    handleSectorClick(labels[els[0].index]);
+  };
+
   return (
     <div className="min-h-screen flex bg-background text-foreground">
       <Sidebar active={active} onSelect={(id) => {
