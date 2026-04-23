@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Bar, Doughnut, Scatter, Line } from "react-chartjs-2";
 import {
   DollarSign, Activity, Leaf, Award, AlertTriangle, Users, Sparkles,
   TrendingDown, TrendingUp, Briefcase, GraduationCap, Clock, Zap, UserMinus, ShieldAlert,
-  CheckCircle2, PiggyBank, Target,
+  CheckCircle2, PiggyBank, Target, Lightbulb, BarChart3, AlertOctagon,
 } from "lucide-react";
 import { useDataset } from "@/hooks/useDataset";
 import {
@@ -196,9 +196,21 @@ const Index = () => {
     datasets: [{
       label: "Custo Total (R$)",
       data: orderByCusto.map((s) => s.custoTotal),
-      backgroundColor: orderByCusto.map((s) => colorFor(s.setor)),
-      borderRadius: 8,
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart;
+        const { ctx: c, chartArea } = chart;
+        if (!chartArea) return colorFor(orderByCusto[ctx.dataIndex]?.setor ?? "");
+        const base = colorFor(orderByCusto[ctx.dataIndex]?.setor ?? "");
+        const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        g.addColorStop(0, base + "40");
+        g.addColorStop(1, base + "ff");
+        return g;
+      },
+      borderColor: orderByCusto.map((s) => colorFor(s.setor)),
+      borderWidth: 1.5,
+      borderRadius: 10,
       borderSkipped: false,
+      hoverBackgroundColor: orderByCusto.map((s) => colorFor(s.setor)),
     }],
   };
 
@@ -208,8 +220,19 @@ const Index = () => {
     datasets: [{
       label: "Produtividade Média",
       data: orderByProd.map((s) => s.prodMedia),
-      backgroundColor: orderByProd.map((s) => colorFor(s.setor)),
-      borderRadius: 8,
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart;
+        const { ctx: c, chartArea } = chart;
+        const base = colorFor(orderByProd[ctx.dataIndex]?.setor ?? "");
+        if (!chartArea) return base;
+        const g = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        g.addColorStop(0, base + "40");
+        g.addColorStop(1, base + "ff");
+        return g;
+      },
+      borderColor: orderByProd.map((s) => colorFor(s.setor)),
+      borderWidth: 1.5,
+      borderRadius: 10,
       borderSkipped: false,
     }],
   };
@@ -219,8 +242,10 @@ const Index = () => {
     datasets: [{
       data: agg.map((s) => s.headcount),
       backgroundColor: agg.map((s) => colorFor(s.setor)),
-      borderColor: "hsl(222 24% 10%)",
-      borderWidth: 3,
+      borderColor: "hsl(222 30% 8%)",
+      borderWidth: 4,
+      hoverOffset: 12,
+      hoverBorderWidth: 2,
     }],
   };
 
@@ -229,10 +254,14 @@ const Index = () => {
       label: s.setor,
       data: filtered
         .filter((r) => r.Setor === s.setor)
-        .map((r) => ({ x: r["Custo Total"], y: r.Produtividade })),
-      backgroundColor: colorFor(s.setor) + "cc",
-      pointRadius: 3,
-      pointHoverRadius: 6,
+        .map((r) => ({ x: r["Custo Total"], y: r.Produtividade, nome: r.Funcionario, cargo: r.Cargo })),
+      backgroundColor: colorFor(s.setor) + "bb",
+      borderColor: colorFor(s.setor),
+      borderWidth: 1,
+      pointRadius: 4,
+      pointHoverRadius: 8,
+      pointHoverBorderWidth: 2,
+      pointHoverBorderColor: "#fff",
     })),
   };
 
@@ -241,10 +270,19 @@ const Index = () => {
     datasets: [{
       label: "CO₂ Total (kg)",
       data: [...agg].sort((a, b) => b.co2Total - a.co2Total).map((s) => s.co2Total),
-      backgroundColor: "rgba(52, 211, 153, 0.6)",
+      backgroundColor: (ctx: any) => {
+        const chart = ctx.chart;
+        const { ctx: c, chartArea } = chart;
+        if (!chartArea) return "rgba(52,211,153,0.7)";
+        const g = c.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+        g.addColorStop(0, "rgba(52,211,153,0.25)");
+        g.addColorStop(1, "rgba(52,211,153,0.95)");
+        return g;
+      },
       borderColor: "rgba(52, 211, 153, 1)",
-      borderWidth: 2,
-      borderRadius: 8,
+      borderWidth: 1.5,
+      borderRadius: 10,
+      borderSkipped: false,
     }],
   };
 
@@ -255,38 +293,36 @@ const Index = () => {
       {
         label: "Mín",
         data: agg.map((s) => s.salarioMin),
-        backgroundColor: "rgba(96, 165, 250, 0.5)",
-        borderRadius: 6,
+        backgroundColor: "rgba(96, 165, 250, 0.85)",
+        borderRadius: 8,
+        borderSkipped: false,
       },
       {
         label: "Médio",
         data: agg.map((s) => s.salarioMedio),
-        backgroundColor: "rgba(34, 211, 238, 0.7)",
-        borderRadius: 6,
+        backgroundColor: "rgba(34, 211, 238, 0.85)",
+        borderRadius: 8,
+        borderSkipped: false,
       },
       {
         label: "Máx",
         data: agg.map((s) => s.salarioMax),
-        backgroundColor: "rgba(192, 132, 252, 0.6)",
-        borderRadius: 6,
+        backgroundColor: "rgba(192, 132, 252, 0.85)",
+        borderRadius: 8,
+        borderSkipped: false,
       },
     ],
   };
 
   // Insights executivos automatizados
-  const insights = buildInsights({
-    setorMaisCaro, setorMenosProd, setorMaiorCO2, setorMelhorCB,
-    corrTempoProd, corrCustoProd,
-    estagiariosCount: estagiariosAcimaLimite.length,
-    desperdicioEstagiarios,
-    veteranosSubpagosCount: veteranosSubpagos.length,
-    gapMensalTotal,
-    riscoDemissaoCount: riscoDemissao.length,
-    outliersCount: outliersCusto.length,
-    totalCusto, totalCO2, prodMedia, headcount,
-    economiaEstagiariosAno, economiaDemissaoAno, economiaTotalAno,
-    aggAll,
-  });
+  const tempoMedioVet = mean(veteranos.map((v) => v["Tempo Empresa"])) || 0;
+  const topVeteranos = veteranosSubpagos.slice(0, 3);
+  // Setores que combinam custo acima da média e produtividade abaixo da média
+  const custoMedioSetor = mean(agg.map((s) => s.custoTotal));
+  const prodMediaSetor = mean(agg.map((s) => s.prodMedia));
+  const setoresAltoCustoBaixaProd = agg
+    .filter((s) => s.custoTotal > custoMedioSetor && s.prodMedia < prodMediaSetor)
+    .map((s) => s.setor);
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
@@ -438,41 +474,109 @@ const Index = () => {
               description="Hover nos pontos e barras para detalhes. Filtros no topo afetam todos os gráficos." />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <ChartCard title="Custo total por setor" subtitle="Ordenado do maior para o menor">
-                <Bar data={custoData} options={{ ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }} />
-              </ChartCard>
-              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100">
-                <Bar data={prodData} options={{ ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }} />
-              </ChartCard>
-              <ChartCard title="Headcount por setor" subtitle="Distribuição de colaboradores">
-                <Doughnut data={headcountData} options={{
-                  responsive: true, maintainAspectRatio: false,
-                  plugins: { legend: { position: "right", labels: { color: "rgba(226,232,240,0.85)", font: { size: 11 } } } },
-                  cutout: "62%",
-                }} />
-              </ChartCard>
-              <ChartCard title="Custo vs Produtividade" subtitle="Cada ponto = um colaborador. Clusters revelam ineficiência.">
-                <Scatter data={scatterData} options={{
+                <Bar data={custoData} options={{
                   ...baseOptions,
                   plugins: {
                     ...baseOptions.plugins,
+                    legend: { display: false },
                     tooltip: {
                       ...baseOptions.plugins.tooltip,
                       callbacks: {
-                        label: (ctx: any) => `${ctx.dataset.label}: ${fmtBRL(ctx.parsed.x)} • ${fmtNum(ctx.parsed.y, 0)} pts`,
+                        label: (ctx: any) => `${fmtBRL(ctx.parsed.y)} (${fmtNum((ctx.parsed.y / totalCusto) * 100, 1)}% do total)`,
                       },
                     },
                   },
                   scales: {
-                    x: { ...baseOptions.scales.x, title: { display: true, text: "Custo Total mensal (R$)", color: "rgba(148,163,184,0.7)" } },
+                    ...baseOptions.scales,
+                    y: { ...baseOptions.scales.y, ticks: { ...baseOptions.scales.y.ticks, callback: (v: any) => `R$ ${(v / 1000).toFixed(0)}k` } },
+                  },
+                } as any} />
+              </ChartCard>
+              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100">
+                <Bar data={prodData} options={{
+                  ...baseOptions,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: { label: (ctx: any) => `${fmtNum(ctx.parsed.y, 1)} pts` },
+                    },
+                  },
+                  scales: {
+                    ...baseOptions.scales,
+                    y: { ...baseOptions.scales.y, beginAtZero: true, max: 100 },
+                  },
+                } as any} />
+              </ChartCard>
+              <ChartCard title="Headcount por setor" subtitle="Distribuição de colaboradores">
+                <Doughnut data={headcountData} options={{
+                  responsive: true, maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: "right" as const, labels: { color: "rgba(226,232,240,0.85)", font: { size: 11 }, padding: 12, usePointStyle: true, pointStyle: "circle" } },
+                    tooltip: {
+                      backgroundColor: "rgba(15, 23, 42, 0.95)", padding: 12, cornerRadius: 10,
+                      callbacks: {
+                        label: (ctx: any) => ` ${ctx.label}: ${ctx.parsed} func (${fmtNum((ctx.parsed / headcount) * 100, 1)}%)`,
+                      },
+                    },
+                  },
+                  cutout: "65%",
+                } as any} />
+              </ChartCard>
+              <ChartCard title="Custo vs Produtividade" subtitle="Quadrante inferior-direito (alto custo, baixa entrega) = ineficiência">
+                <Scatter data={scatterData} options={{
+                  ...baseOptions,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    legend: { ...baseOptions.plugins.legend, position: "bottom" as const, labels: { ...baseOptions.plugins.legend.labels, usePointStyle: true, pointStyle: "circle", padding: 10 } },
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: {
+                        title: (items: any[]) => items[0]?.raw?.nome ?? "",
+                        label: (ctx: any) => [
+                          `${ctx.raw.cargo} · ${ctx.dataset.label}`,
+                          `Custo: ${fmtBRL(ctx.parsed.x)}`,
+                          `Produtividade: ${fmtNum(ctx.parsed.y, 0)} pts`,
+                        ],
+                      },
+                    },
+                  },
+                  scales: {
+                    x: { ...baseOptions.scales.x, title: { display: true, text: "Custo Total mensal (R$)", color: "rgba(148,163,184,0.7)" }, ticks: { ...baseOptions.scales.x.ticks, callback: (v: any) => `R$ ${(v / 1000).toFixed(0)}k` } },
                     y: { ...baseOptions.scales.y, title: { display: true, text: "Produtividade (pts)", color: "rgba(148,163,184,0.7)" } },
                   },
                 }} />
               </ChartCard>
               <ChartCard title="CO₂ total por setor" subtitle="Impacto ambiental acumulado">
-                <Bar data={co2Data} options={{ ...baseOptions, indexAxis: "y" as const, plugins: { ...baseOptions.plugins, legend: { display: false } } }} />
+                <Bar data={co2Data} options={{
+                  ...baseOptions,
+                  indexAxis: "y" as const,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    legend: { display: false },
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: { label: (ctx: any) => `${fmtNum(ctx.parsed.x, 1)} kg de CO₂` },
+                    },
+                  },
+                } as any} />
               </ChartCard>
               <ChartCard title="Distribuição salarial" subtitle="Mínimo, médio e máximo por setor">
-                <Bar data={salDist} options={baseOptions} />
+                <Bar data={salDist} options={{
+                  ...baseOptions,
+                  plugins: {
+                    ...baseOptions.plugins,
+                    tooltip: {
+                      ...baseOptions.plugins.tooltip,
+                      callbacks: { label: (ctx: any) => `${ctx.dataset.label}: ${fmtBRL(ctx.parsed.y)}` },
+                    },
+                  },
+                  scales: {
+                    ...baseOptions.scales,
+                    y: { ...baseOptions.scales.y, ticks: { ...baseOptions.scales.y.ticks, callback: (v: any) => `R$ ${(v / 1000).toFixed(0)}k` } },
+                  },
+                } as any} />
               </ChartCard>
             </div>
           </section>
@@ -752,23 +856,125 @@ const Index = () => {
                 <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground">
                   <Sparkles className="h-5 w-5" />
                 </div>
-                <h3 className="font-display text-xl font-semibold">Sumário gerencial</h3>
+                <div>
+                  <h3 className="font-display text-xl font-semibold">Análise Executiva Automática</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Insights gerados a partir dos dados em tempo real</p>
+                </div>
               </div>
-              <p className="text-base leading-relaxed text-foreground/90">{insights.summary}</p>
 
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {insights.cards.map((c, i) => (
-                  <div key={i} className="rounded-xl p-4 border border-border bg-secondary/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className={`uppercase text-[10px] tracking-wider border-${c.tone === "danger" ? "danger" : c.tone === "warning" ? "warning" : "primary"}/40`}>
-                        {c.tag}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{c.setor}</span>
-                    </div>
-                    <p className="text-sm leading-relaxed">{c.text}</p>
-                  </div>
-                ))}
-              </div>
+              <p className="text-base leading-relaxed text-foreground/90">
+                A organização opera atualmente com <strong>{headcount.toLocaleString("pt-BR")} colaboradores</strong> em{" "}
+                <strong>{agg.length} setores</strong>, totalizando um custo mensal de{" "}
+                <strong>{fmtBRL(totalCusto)}</strong> e emissão de <strong>{fmtNum(totalCO2, 0)} kg de CO₂</strong>.
+              </p>
+
+              {/* Pontos de atenção imediata */}
+              <ExecBlock icon={Target} color="danger" title="Pontos de atenção imediata">
+                {setorMaisCaro && (
+                  <li>O setor <Hl color="danger">{setorMaisCaro.setor}</Hl> concentra o maior custo total (
+                    <strong>{fmtBRL(setorMaisCaro.custoTotal)}, {fmtNum((setorMaisCaro.custoTotal / totalCusto) * 100, 1)}% do total</strong>).</li>
+                )}
+                {setorMenosProd && (
+                  <li>O setor <Hl color="warning">{setorMenosProd.setor}</Hl> apresenta a menor produtividade média (
+                    <strong>{fmtNum(setorMenosProd.prodMedia, 1)}</strong>), indicando potencial de revisão de processos.</li>
+                )}
+                {setorMaiorCO2 && (
+                  <li>A maior emissão de CO₂ vem de <Hl color="warning">{setorMaiorCO2.setor}</Hl> (
+                    <strong>{fmtNum(setorMaiorCO2.co2Total, 1)} kg, {fmtNum((setorMaiorCO2.co2Total / totalCO2) * 100, 1)}% do total</strong>).</li>
+                )}
+                {setoresAltoCustoBaixaProd.length > 0 && (
+                  <li>Setores com <Hl color="danger">alto custo e baixa produtividade simultaneamente</Hl>:{" "}
+                    {setoresAltoCustoBaixaProd.join(", ")}.</li>
+                )}
+              </ExecBlock>
+
+              {/* Destaques positivos */}
+              <ExecBlock icon={CheckCircle2} color="success" title="Destaques positivos">
+                {setorMelhorCB && (
+                  <li>Melhor custo-benefício: <strong>{setorMelhorCB.setor}</strong> (
+                    {fmtNum(1000 / Math.max(setorMelhorCB.custoPorResultado, 1), 2)} pontos de produtividade por R$ 1.000 investidos).</li>
+                )}
+              </ExecBlock>
+
+              {/* Estagiários & Veteranos */}
+              <ExecBlock icon={GraduationCap} color="primary" title="Estagiários & Veteranos">
+                {estagiariosAcimaLimite.length > 0 && (
+                  <li>
+                    Foram identificados <strong>{estagiariosAcimaLimite.length} estagiários</strong> com salário acima do limite de{" "}
+                    {fmtBRL(LIMITE_ESTAGIO)}, gerando um desperdício anual estimado de{" "}
+                    <Hl color="danger">{fmtBRL(desperdicioEstagiarios)}</Hl>.
+                  </li>
+                )}
+                {veteranosSubpagos.length > 0 && (
+                  <li>
+                    <strong>{veteranosSubpagos.length} veteranos</strong> (≥ 5 anos de casa, tempo médio de{" "}
+                    <strong>{fmtNum(tempoMedioVet, 1)} anos</strong>) recebem{" "}
+                    <Hl color="warning">abaixo da mediana do próprio cargo</Hl>, somando um gap salarial de{" "}
+                    <strong>{fmtBRL(gapMensalTotal)}/mês</strong> (<Hl color="danger">{fmtBRL(gapMensalTotal * 12)}/ano</Hl>).
+                  </li>
+                )}
+                {topVeteranos.length > 0 && (
+                  <li>
+                    Casos mais críticos:{" "}
+                    {topVeteranos.map((v, i) => (
+                      <span key={i}>
+                        <strong>{v.Funcionario}</strong> ({v.Cargo}, {fmtNum(v["Tempo Empresa"], 1)}a, gap {fmtBRL(v.gap)})
+                        {i < topVeteranos.length - 1 ? "; " : "."}
+                      </span>
+                    ))}
+                  </li>
+                )}
+                {riscoDemissao.length > 0 && (
+                  <li>
+                    <Hl color="danger">{riscoDemissao.length} colaboradores com 8+ anos de casa</Hl> combinam custo acima da média e produtividade abaixo da média —
+                    sugere-se <strong>plano de desligamento estruturado</strong> ou requalificação, com economia anual projetada de{" "}
+                    <Hl color="success">{fmtBRL(economiaDemissaoAno)}</Hl>.
+                  </li>
+                )}
+                <li>Risco associado: <Hl color="warning">turnover de talentos seniores</Hl>, perda de conhecimento institucional e desmotivação de quem mais entrega.</li>
+                <li>Recomenda-se auditar contratos individuais antes de qualquer ajuste retroativo.</li>
+              </ExecBlock>
+
+              {/* Correlações */}
+              <ExecBlock icon={BarChart3} color="primary" title="Correlações observadas">
+                <li>
+                  Tempo de empresa × produtividade: <strong>r = {corrTempoProd.toFixed(3)}</strong> —{" "}
+                  {Math.abs(corrTempoProd) < 0.15
+                    ? "praticamente nula, veteranos não entregam mais que iniciantes."
+                    : corrTempoProd > 0
+                    ? "mais tempo de casa tende a estar associado a maior produtividade."
+                    : "mais tempo de casa associado a menor produtividade."}
+                </li>
+                <li>
+                  Custo total × produtividade: <strong>r = {corrCustoProd.toFixed(3)}</strong> —{" "}
+                  {corrCustoProd > 0.3
+                    ? "investimento maior se traduz em mais entrega."
+                    : corrCustoProd > 0.1
+                    ? "investimento maior tem retorno parcial em entrega."
+                    : "custos altos não estão pareados a entregas — ineficiência alocativa."}
+                </li>
+              </ExecBlock>
+
+              {/* Recomendações */}
+              <ExecBlock icon={Lightbulb} color="warning" title="Recomendações">
+                {setorMenosProd && (
+                  <li>Revisar headcount e processos em <strong>{setorMenosProd.setor}</strong> e nos demais setores classificados como críticos.</li>
+                )}
+                <li>Padronizar a remuneração de estagiários ao limite de <strong>{fmtBRL(LIMITE_ESTAGIO)}</strong>.</li>
+                {veteranosSubpagos.length > 0 && (
+                  <li>Estruturar plano de equiparação salarial para os <strong>{veteranosSubpagos.length} veteranos subpagos</strong>, priorizando os de maior gap e tempo de casa.</li>
+                )}
+                {setorMaiorCO2 && (
+                  <li>Implementar plano de redução de CO₂ focado em <strong>{setorMaiorCO2.setor}</strong>.</li>
+                )}
+                {setorMelhorCB && (
+                  <li>Replicar boas práticas de <strong>{setorMelhorCB.setor}</strong> nos setores de menor eficiência.</li>
+                )}
+                <li>
+                  Economia anual total projetada combinando reajuste de estagiários e desligamento estruturado:{" "}
+                  <Hl color="success">{fmtBRL(economiaTotalAno)}</Hl>.
+                </li>
+              </ExecBlock>
             </div>
 
             {/* CHECKLIST FINAL DE CONFORMIDADE */}
@@ -904,9 +1110,43 @@ const PersonList = ({ rows, metric }: { rows: Funcionario[]; metric: (r: Funcion
   );
 };
 
-/* ============= insights builder ============= */
+/* ============= executive blocks ============= */
 
-function buildInsights(p: any) {
+const colorClasses = {
+  danger: "text-danger",
+  warning: "text-warning",
+  success: "text-[hsl(var(--success))]",
+  primary: "text-primary",
+} as const;
+
+const bgColorClasses = {
+  danger: "bg-danger/15 text-danger",
+  warning: "bg-warning/15 text-warning",
+  success: "bg-[hsl(var(--success))]/15 text-[hsl(var(--success))]",
+  primary: "bg-primary/15 text-primary",
+} as const;
+
+const Hl = ({ color, children }: { color: keyof typeof colorClasses; children: ReactNode }) => (
+  <strong className={colorClasses[color]}>{children}</strong>
+);
+
+const ExecBlock = ({
+  icon: Icon, color, title, children,
+}: { icon: any; color: keyof typeof bgColorClasses; title: string; children: ReactNode }) => (
+  <div className="mt-6">
+    <div className="flex items-center gap-2 mb-2.5">
+      <span className={`p-1.5 rounded-md ${bgColorClasses[color]}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <h4 className={`font-display font-semibold text-base ${colorClasses[color]}`}>{title}</h4>
+    </div>
+    <ul className="space-y-2 pl-6 list-disc marker:text-muted-foreground/60 text-sm leading-relaxed text-foreground/90">
+      {children}
+    </ul>
+  </div>
+);
+
+function _legacyInsights(p: any) {
   const partes: string[] = [];
   if (p.setorMaisCaro)
     partes.push(`O setor ${p.setorMaisCaro.setor} concentra o maior custo total (${fmtBRL(p.setorMaisCaro.custoTotal)}, ${fmtNum((p.setorMaisCaro.custoTotal / p.totalCusto) * 100, 1)}% da empresa)`);
