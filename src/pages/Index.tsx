@@ -27,6 +27,25 @@ const Index = () => {
   const [setorFiltro, setSetorFiltro] = useState("__all__");
   const [cargoFiltro, setCargoFiltro] = useState("__all__");
 
+  // Ordenação dos KPI cards do topo (Diagnóstico)
+  const [topKpiSort, setTopKpiSort] = useState<"default" | "custo" | "prod" | "co2" | "headcount">("default");
+  // Ordenação dos KPI cards de Sustentabilidade
+  const [esgKpiSort, setEsgKpiSort] = useState<"default" | "energia" | "co2" | "desperdicio">("default");
+  // Ordenação da tabela KPIs por setor
+  const [tableSortKey, setTableSortKey] = useState<
+    "setor" | "headcount" | "custoTotal" | "custoMedio" | "prodMedia" | "custoPorResultado" | "co2Total" | "co2Medio" | "desperdicioMedio"
+  >("custoTotal");
+  const [tableSortDir, setTableSortDir] = useState<"asc" | "desc">("desc");
+  // Ordenação das listas de pessoas
+  const [estagSort, setEstagSort] = useState<"salario" | "excedente" | "nome" | "setor">("salario");
+  const [estagDir, setEstagDir] = useState<"asc" | "desc">("desc");
+  const [vetSort, setVetSort] = useState<"gap" | "tempo" | "salario" | "nome">("gap");
+  const [vetDir, setVetDir] = useState<"asc" | "desc">("desc");
+  const [riscoSort, setRiscoSort] = useState<"score" | "tempo" | "custo" | "prod" | "nome">("score");
+  const [riscoDir, setRiscoDir] = useState<"asc" | "desc">("desc");
+  const [outSort, setOutSort] = useState<"custo" | "prod" | "tempo" | "nome">("custo");
+  const [outDir, setOutDir] = useState<"asc" | "desc">("desc");
+
   const filtered = useMemo(() => {
     if (!data) return [] as Funcionario[];
     return data.base.filter(
