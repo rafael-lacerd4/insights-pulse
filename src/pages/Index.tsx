@@ -928,7 +928,11 @@ function buildInsights(p: any) {
     ` Custo × produtividade tem correlação ${p.corrCustoProd.toFixed(2)}, ` +
     (p.corrCustoProd > 0.3
       ? "ou seja, pagar mais tem retorno em entrega."
-      : "indicando que custos altos não estão pareados a entregas — há ineficiência alocativa.");
+      : "indicando que custos altos não estão pareados a entregas — há ineficiência alocativa.") +
+    ` A combinação dos dois planos de ação (reajuste de estagiários + desligamento estruturado de veteranos críticos) ` +
+    `representa uma economia anual projetada de ${fmtBRL(p.economiaTotalAno)} — sendo ${fmtBRL(p.economiaEstagiariosAno)} ` +
+    `pela padronização da bolsa-auxílio e ${fmtBRL(p.economiaDemissaoAno)} pela revisão dos ${p.riscoDemissaoCount} colaboradores ` +
+    `com 8+ anos de casa que combinam custo elevado e baixa entrega.`;
 
   const cards: { tag: string; setor: string; text: string; tone: "danger" | "warning" | "primary" }[] = [];
 
