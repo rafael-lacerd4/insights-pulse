@@ -784,15 +784,35 @@ const Index = () => {
             {/* CANDIDATOS A DESLIGAMENTO + OUTLIERS */}
             <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div className="glass-card rounded-xl p-5 animate-fade-in-up border-l-4 border-l-danger">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-danger/15 text-danger"><UserMinus className="h-5 w-5" /></div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h3 className="font-display font-semibold">Candidatos a desligamento ({riscoDemissao.length})</h3>
                     <p className="text-xs text-muted-foreground">≥ 8 anos de casa + custo acima da média + produtividade abaixo da média</p>
                   </div>
+                  <SortMenu
+                    value={riscoSort}
+                    direction={riscoDir}
+                    onDirectionChange={setRiscoDir}
+                    onChange={(v) => setRiscoSort(v as any)}
+                    options={[
+                      { value: "score", label: "Score de risco" },
+                      { value: "tempo", label: "Tempo de empresa" },
+                      { value: "custo", label: "Custo total" },
+                      { value: "prod", label: "Produtividade" },
+                      { value: "nome", label: "Nome (A–Z)" },
+                    ]}
+                  />
                 </div>
                 <ul className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
-                  {riscoDemissao.slice(0, 12).map((r, i) => (
+                  {[...riscoDemissao].sort((a, b) => {
+                    const dir = riscoDir === "asc" ? 1 : -1;
+                    if (riscoSort === "score") return (a.scoreRisco - b.scoreRisco) * dir;
+                    if (riscoSort === "tempo") return (a["Tempo Empresa"] - b["Tempo Empresa"]) * dir;
+                    if (riscoSort === "custo") return (a["Custo Total"] - b["Custo Total"]) * dir;
+                    if (riscoSort === "prod") return (a.Produtividade - b.Produtividade) * dir;
+                    return a.Funcionario.localeCompare(b.Funcionario) * dir;
+                  }).slice(0, 12).map((r, i) => (
                     <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-danger/5 hover:bg-danger/10 transition-colors">
                       <ShieldAlert className="h-4 w-4 text-danger shrink-0" />
                       <div className="min-w-0 flex-1">
