@@ -318,7 +318,7 @@ const Index = () => {
               <KpiCard
                 label="Headcount"
                 value={headcount.toLocaleString("pt-BR")}
-                hint={`${estagiarios.length} estagiários • ${veteranosSubpagos.length} veteranos subpagos`}
+                hint={`${estagiariosAcimaLimite.length} estagiários acima do limite • ${veteranosSubpagos.length} veteranos subpagos`}
                 icon={Users} tone="default" delay={150}
               />
             </div>
