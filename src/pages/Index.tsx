@@ -132,6 +132,39 @@ const Index = () => {
     [filtered]
   );
 
+  // ===== Economias projetadas =====
+  // Economia anual reajustando estagiários ao limite legal (R$1.500)
+  const economiaEstagiariosAno = desperdicioEstagiarios; // já é * 12
+  // Economia anual com desligamento dos veteranos de alto risco (custo total = mensal CLT)
+  const economiaDemissaoAno = useMemo(
+    () => sum(riscoDemissao.map((r) => r["Custo Total"] * 12)),
+    [riscoDemissao]
+  );
+  const economiaTotalAno = economiaEstagiariosAno + economiaDemissaoAno;
+
+  // ===== Tempo × Produtividade agrupado em faixas (binning) =====
+  // Substitui a "nuvem" densa de pontos por uma curva clara de média por faixa.
+  const tempoBins = useMemo(() => {
+    const buckets: { label: string; min: number; max: number }[] = [
+      { label: "0–2a", min: 0, max: 2 },
+      { label: "2–5a", min: 2, max: 5 },
+      { label: "5–8a", min: 5, max: 8 },
+      { label: "8–12a", min: 8, max: 12 },
+      { label: "12–18a", min: 12, max: 18 },
+      { label: "18a+", min: 18, max: 999 },
+    ];
+    return buckets.map((b) => {
+      const inRange = filtered.filter((r) => r["Tempo Empresa"] >= b.min && r["Tempo Empresa"] < b.max);
+      const prods = inRange.map((r) => r.Produtividade);
+      return {
+        label: b.label,
+        n: inRange.length,
+        media: mean(prods),
+        custoMedio: mean(inRange.map((r) => r["Custo Total"])),
+      };
+    });
+  }, [filtered]);
+
   // ============= Loading / Error =============
   if (loading && !data) {
     return (
