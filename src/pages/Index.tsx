@@ -778,14 +778,21 @@ function buildInsights(p: any) {
   if (p.veteranosSubpagosCount > 0) {
     cards.push({
       tag: "Retenção", setor: "Transversal", tone: "warning",
-      text: `${p.veteranosSubpagosCount} colaboradores com 7+ anos de casa estão recebendo abaixo de 85% da média da empresa. Risco de turnover de conhecimento crítico.`,
+      text: `${p.veteranosSubpagosCount} veteranos (5+ anos) recebem abaixo da mediana do próprio cargo, gap de ${fmtBRL(p.gapMensalTotal)}/mês. Risco real de turnover de conhecimento institucional.`,
+    });
+  }
+
+  if (p.riscoDemissaoCount > 0) {
+    cards.push({
+      tag: "Desligamento", setor: "Transversal", tone: "danger",
+      text: `${p.riscoDemissaoCount} colaboradores com 8+ anos de casa combinam custo acima da média e produtividade abaixo da média. Avaliar plano de transição, requalificação ou desligamento estruturado.`,
     });
   }
 
   if (p.estagiariosCount > 0) {
     cards.push({
-      tag: "Pipeline", setor: "Transversal", tone: "primary",
-      text: `${p.estagiariosCount} estagiários ativos. Avalie programa de efetivação para reter talento de baixo custo com produtividade comparável aos juniores.`,
+      tag: "Compliance", setor: "Transversal", tone: "danger",
+      text: `${p.estagiariosCount} estagiários com salário acima do limite de R$ 1.500, gerando desperdício anual estimado de ${fmtBRL(p.desperdicioEstagiarios)}. Padronizar contratos antes de qualquer reajuste.`,
     });
   }
 
