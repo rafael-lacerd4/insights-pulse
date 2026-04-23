@@ -51,16 +51,70 @@ const Index = () => {
     .sort((a, b) => a.custoPorResultado - b.custoPorResultado)[0];
 
   // Estagiários e veteranos
+  const LIMITE_ESTAGIO = 1500; // referência salarial para estagiário
   const estagiarios = useMemo(
-    () => filtered.filter((r) => /estag/i.test(r.Cargo)),
+    () => filtered.filter((r) => /estagi/i.test(r.Cargo)),
     [filtered]
   );
-  const salMedioEmpresa = useMemo(() => mean(data?.base.map((r) => r["Salario Base"]) ?? []), [data]);
+  const estagiariosAcimaLimite = useMemo(
+    () => [...estagiarios]
+      .filter((r) => r["Salario Base"] > LIMITE_ESTAGIO)
+      .sort((a, b) => b["Salario Base"] - a["Salario Base"]),
+    [estagiarios]
+  );
+  const desperdicioEstagiarios = useMemo(
+    () => sum(estagiariosAcimaLimite.map((r) => (r["Salario Base"] - LIMITE_ESTAGIO) * 12)),
+    [estagiariosAcimaLimite]
+  );
+
+  // Mediana salarial por cargo (referência da própria planilha)
+  const medianaPorCargo = useMemo(() => {
+    if (!data) return new Map<string, number>();
+    const groups = new Map<string, number[]>();
+    data.base.forEach((r) => {
+      if (!groups.has(r.Cargo)) groups.set(r.Cargo, []);
+      groups.get(r.Cargo)!.push(r["Salario Base"]);
+    });
+    const m = new Map<string, number>();
+    groups.forEach((v, k) => m.set(k, median(v)));
+    return m;
+  }, [data]);
+
+  // Veteranos (>= 5 anos) recebendo abaixo da mediana do próprio cargo
+  const veteranos = useMemo(
+    () => filtered.filter((r) => r["Tempo Empresa"] >= 5),
+    [filtered]
+  );
   const veteranosSubpagos = useMemo(() => {
+    return veteranos
+      .map((r) => {
+        const med = medianaPorCargo.get(r.Cargo) ?? 0;
+        return { ...r, mediana: med, gap: med - r["Salario Base"] };
+      })
+      .filter((r) => r.gap > 0)
+      .sort((a, b) => b.gap - a.gap);
+  }, [veteranos, medianaPorCargo]);
+  const gapMensalTotal = useMemo(
+    () => sum(veteranosSubpagos.map((r) => r.gap)),
+    [veteranosSubpagos]
+  );
+
+  // Risco de demissão: muito tempo de casa + alto custo + baixa produtividade
+  const riscoDemissao = useMemo(() => {
+    if (!filtered.length) return [];
+    const prodMed = mean(filtered.map((r) => r.Produtividade));
+    const custoMed = mean(filtered.map((r) => r["Custo Total"]));
     return filtered
-      .filter((r) => r["Tempo Empresa"] >= 7 && r["Salario Base"] < salMedioEmpresa * 0.85)
-      .sort((a, b) => b["Tempo Empresa"] - a["Tempo Empresa"]);
-  }, [filtered, salMedioEmpresa]);
+      .filter((r) => r["Tempo Empresa"] >= 8 && r["Custo Total"] > custoMed && r.Produtividade < prodMed)
+      .map((r) => ({
+        ...r,
+        scoreRisco:
+          (r["Tempo Empresa"] / 30) * 0.3 +
+          (r["Custo Total"] / custoMed - 1) * 0.4 +
+          (1 - r.Produtividade / Math.max(prodMed, 1)) * 0.3,
+      }))
+      .sort((a, b) => b.scoreRisco - a.scoreRisco);
+  }, [filtered]);
 
   const outliersCusto = useMemo(() => outliers(filtered, (r) => r["Custo Total"]).slice(0, 8), [filtered]);
 
