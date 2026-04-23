@@ -57,6 +57,7 @@ All colors MUST be HSL.
     --gradient-glow: radial-gradient(circle at 30% 0%, hsl(188 94% 55% / 0.15), transparent 50%);
     --shadow-glow: 0 10px 40px -10px hsl(188 94% 55% / 0.35);
     --shadow-elev: 0 8px 30px -12px hsl(222 60% 2% / 0.6);
+    --shadow-card-hover: 0 18px 50px -18px hsl(188 94% 55% / 0.35), 0 6px 18px -10px hsl(222 60% 2% / 0.5);
   }
 }
 
@@ -68,7 +69,12 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01", "cv11";
-    background-image: var(--gradient-glow);
+    background-image:
+      var(--gradient-glow),
+      linear-gradient(hsl(222 22% 14% / 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(222 22% 14% / 0.4) 1px, transparent 1px);
+    background-size: auto, 32px 32px, 32px 32px;
+    background-position: 0 0, 0 0, 0 0;
     background-attachment: fixed;
   }
 
@@ -84,6 +90,15 @@ All colors MUST be HSL.
     border: 1px solid hsl(var(--border));
     box-shadow: var(--shadow-elev);
     backdrop-filter: blur(8px);
+    transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, border-color .25s ease;
+  }
+  .glass-card-hover {
+    @apply glass-card;
+  }
+  .glass-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: hsl(var(--primary) / 0.45);
+    box-shadow: var(--shadow-card-hover);
   }
   .kpi-glow {
     box-shadow: var(--shadow-glow);
@@ -93,5 +108,17 @@ All colors MUST be HSL.
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 6px; }
+  .row-hover {
+    transition: background-color .15s ease, box-shadow .15s ease;
+  }
+  .row-hover:hover {
+    background-color: hsl(var(--secondary) / 0.55);
+    box-shadow: inset 2px 0 0 hsl(var(--primary));
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium border;
   }
 }
