@@ -529,7 +529,8 @@ const Index = () => {
                           <DespBadge value={s.desperdicioMedio} />
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
