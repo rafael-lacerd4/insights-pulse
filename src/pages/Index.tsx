@@ -2,11 +2,11 @@ import { useMemo, useState } from "react";
 import { Bar, Doughnut, Scatter, Line } from "react-chartjs-2";
 import {
   DollarSign, Activity, Leaf, Award, AlertTriangle, Users, Sparkles,
-  TrendingDown, TrendingUp, Briefcase, GraduationCap, Clock, Zap,
+  TrendingDown, TrendingUp, Briefcase, GraduationCap, Clock, Zap, UserMinus, ShieldAlert,
 } from "lucide-react";
 import { useDataset } from "@/hooks/useDataset";
 import {
-  aggregateBySetor, fmtBRL, fmtNum, mean, sum, pearson, outliers,
+  aggregateBySetor, fmtBRL, fmtNum, mean, sum, median, pearson, outliers,
   colorFor, type Funcionario,
 } from "@/lib/dataset";
 import { Sidebar, SECTIONS } from "@/components/dashboard/Sidebar";
@@ -46,21 +46,79 @@ const Index = () => {
   const setorMaisCaro = [...agg].sort((a, b) => b.custoTotal - a.custoTotal)[0];
   const setorMenosProd = [...agg].sort((a, b) => a.prodMedia - b.prodMedia)[0];
   const setorMaiorCO2 = [...agg].sort((a, b) => b.co2Total - a.co2Total)[0];
+  // Melhor custo-benefício: menor custo por projeto entregue, EXCLUINDO setores com produtividade
+  // abaixo da média (evita falso positivo de Atendimento que tem custo baixo mas baixa entrega).
+  const prodMediaGeral = mean(filtered.map((r) => r.Produtividade));
   const setorMelhorCB = [...agg]
-    .filter((s) => s.prodMedia > 0)
-    .sort((a, b) => a.custoPorResultado - b.custoPorResultado)[0];
+    .filter((s) => s.prodMedia >= prodMediaGeral && s.projetosTotais > 0)
+    .sort((a, b) => a.custoPorProjeto - b.custoPorProjeto)[0]
+    ?? [...agg].sort((a, b) => a.custoPorResultado - b.custoPorResultado)[0];
 
   // Estagiários e veteranos
+  const LIMITE_ESTAGIO = 1500; // referência salarial para estagiário
   const estagiarios = useMemo(
-    () => filtered.filter((r) => /estag/i.test(r.Cargo)),
+    () => filtered.filter((r) => /estagi/i.test(r.Cargo)),
     [filtered]
   );
-  const salMedioEmpresa = useMemo(() => mean(data?.base.map((r) => r["Salario Base"]) ?? []), [data]);
+  const estagiariosAcimaLimite = useMemo(
+    () => [...estagiarios]
+      .filter((r) => r["Salario Base"] > LIMITE_ESTAGIO)
+      .sort((a, b) => b["Salario Base"] - a["Salario Base"]),
+    [estagiarios]
+  );
+  const desperdicioEstagiarios = useMemo(
+    () => sum(estagiariosAcimaLimite.map((r) => (r["Salario Base"] - LIMITE_ESTAGIO) * 12)),
+    [estagiariosAcimaLimite]
+  );
+
+  // Mediana salarial por cargo (referência da própria planilha)
+  const medianaPorCargo = useMemo(() => {
+    if (!data) return new Map<string, number>();
+    const groups = new Map<string, number[]>();
+    data.base.forEach((r) => {
+      if (!groups.has(r.Cargo)) groups.set(r.Cargo, []);
+      groups.get(r.Cargo)!.push(r["Salario Base"]);
+    });
+    const m = new Map<string, number>();
+    groups.forEach((v, k) => m.set(k, median(v)));
+    return m;
+  }, [data]);
+
+  // Veteranos (>= 5 anos) recebendo abaixo da mediana do próprio cargo
+  const veteranos = useMemo(
+    () => filtered.filter((r) => r["Tempo Empresa"] >= 5),
+    [filtered]
+  );
   const veteranosSubpagos = useMemo(() => {
+    return veteranos
+      .map((r) => {
+        const med = medianaPorCargo.get(r.Cargo) ?? 0;
+        return { ...r, mediana: med, gap: med - r["Salario Base"] };
+      })
+      .filter((r) => r.gap > 0)
+      .sort((a, b) => b.gap - a.gap);
+  }, [veteranos, medianaPorCargo]);
+  const gapMensalTotal = useMemo(
+    () => sum(veteranosSubpagos.map((r) => r.gap)),
+    [veteranosSubpagos]
+  );
+
+  // Risco de demissão: muito tempo de casa + alto custo + baixa produtividade
+  const riscoDemissao = useMemo(() => {
+    if (!filtered.length) return [];
+    const prodMed = mean(filtered.map((r) => r.Produtividade));
+    const custoMed = mean(filtered.map((r) => r["Custo Total"]));
     return filtered
-      .filter((r) => r["Tempo Empresa"] >= 7 && r["Salario Base"] < salMedioEmpresa * 0.85)
-      .sort((a, b) => b["Tempo Empresa"] - a["Tempo Empresa"]);
-  }, [filtered, salMedioEmpresa]);
+      .filter((r) => r["Tempo Empresa"] >= 8 && r["Custo Total"] > custoMed && r.Produtividade < prodMed)
+      .map((r) => ({
+        ...r,
+        scoreRisco:
+          (r["Tempo Empresa"] / 30) * 0.3 +
+          (r["Custo Total"] / custoMed - 1) * 0.4 +
+          (1 - r.Produtividade / Math.max(prodMed, 1)) * 0.3,
+      }))
+      .sort((a, b) => b.scoreRisco - a.scoreRisco);
+  }, [filtered]);
 
   const outliersCusto = useMemo(() => outliers(filtered, (r) => r["Custo Total"]).slice(0, 8), [filtered]);
 
@@ -185,8 +243,11 @@ const Index = () => {
   const insights = buildInsights({
     setorMaisCaro, setorMenosProd, setorMaiorCO2, setorMelhorCB,
     corrTempoProd, corrCustoProd,
-    estagiariosCount: estagiarios.length,
+    estagiariosCount: estagiariosAcimaLimite.length,
+    desperdicioEstagiarios,
     veteranosSubpagosCount: veteranosSubpagos.length,
+    gapMensalTotal,
+    riscoDemissaoCount: riscoDemissao.length,
     outliersCount: outliersCusto.length,
     totalCusto, totalCO2, prodMedia, headcount,
     aggAll,
@@ -257,7 +318,7 @@ const Index = () => {
               <KpiCard
                 label="Headcount"
                 value={headcount.toLocaleString("pt-BR")}
-                hint={`${estagiarios.length} estagiários • ${veteranosSubpagos.length} veteranos subpagos`}
+                hint={`${estagiariosAcimaLimite.length} estagiários acima do limite • ${veteranosSubpagos.length} veteranos subpagos`}
                 icon={Users} tone="default" delay={150}
               />
             </div>
@@ -375,40 +436,131 @@ const Index = () => {
           {/* ===================== PESSOAS ===================== */}
           <section id="pessoas" className="scroll-mt-24">
             <SectionHeader eyebrow="Capital humano" title="Estagiários, veteranos e outliers"
-              description="Análise de quem está nos extremos: novos talentos em desenvolvimento e profissionais com longa casa potencialmente subpagos." />
+              description="Distorções salariais em estagiários, veteranos subpagos e candidatos a desligamento por baixa entrega + alto custo." />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* ESTAGIÁRIOS ACIMA DO LIMITE */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-primary/15 text-primary"><GraduationCap className="h-5 w-5" /></div>
+                  <div className="p-2 rounded-lg bg-danger/15 text-danger"><GraduationCap className="h-5 w-5" /></div>
                   <div>
-                    <h3 className="font-display font-semibold">Estagiários ({estagiarios.length})</h3>
-                    <p className="text-xs text-muted-foreground">Salário médio: {fmtBRL(mean(estagiarios.map((e) => e["Salario Base"])) || 0)}</p>
+                    <h3 className="font-display font-semibold">Estagiários com salário acima do limite</h3>
+                    <p className="text-xs text-muted-foreground">Limite de referência: {fmtBRL(LIMITE_ESTAGIO)}</p>
                   </div>
                 </div>
-                <PersonList rows={estagiarios.slice(0, 6)} metric={(r) => `${fmtNum(r.Produtividade, 0)} pts`} />
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Casos</p>
+                    <p className="font-display text-2xl text-primary mt-1">{estagiariosAcimaLimite.length}</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Desperdício / ano</p>
+                    <p className="font-display text-2xl text-primary mt-1">{fmtBRL(desperdicioEstagiarios)}</p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+                  {estagiariosAcimaLimite.slice(0, 14).map((r, i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <AlertTriangle className="h-3.5 w-3.5 text-danger shrink-0" />
+                        <p className="text-sm font-medium truncate">{r.Funcionario}</p>
+                        <span className="text-xs text-muted-foreground truncate">· {r.Setor}</span>
+                      </div>
+                      <span className="font-mono text-xs shrink-0">
+                        {fmtBRL(r["Salario Base"])}
+                        <span className="text-danger ml-1">(+{fmtBRL(r["Salario Base"] - LIMITE_ESTAGIO)})</span>
+                      </span>
+                    </li>
+                  ))}
+                  {!estagiariosAcimaLimite.length && (
+                    <li className="text-sm text-muted-foreground py-4 text-center">Nenhum estagiário acima do limite no filtro atual.</li>
+                  )}
+                </ul>
               </div>
 
+              {/* VETERANOS SUBPAGOS */}
               <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-warning/15 text-warning"><Clock className="h-5 w-5" /></div>
                   <div>
-                    <h3 className="font-display font-semibold">Veteranos subpagos ({veteranosSubpagos.length})</h3>
-                    <p className="text-xs text-muted-foreground">7+ anos de casa, salário &lt; 85% da média</p>
+                    <h3 className="font-display font-semibold">Veteranos subpagos</h3>
+                    <p className="text-xs text-muted-foreground">≥ 5 anos de casa recebendo abaixo da mediana do próprio cargo</p>
                   </div>
                 </div>
-                <PersonList
-                  rows={veteranosSubpagos.slice(0, 6)}
-                  metric={(r) => `${fmtNum(r["Tempo Empresa"], 1)}a • ${fmtBRL(r["Salario Base"])}`}
-                />
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Casos</p>
+                    <p className="font-display text-2xl text-warning mt-1">{veteranosSubpagos.length}</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Gap mensal</p>
+                    <p className="font-display text-xl text-warning mt-1">{fmtBRL(gapMensalTotal)}</p>
+                  </div>
+                  <div className="rounded-lg bg-secondary/40 border border-border p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tempo médio</p>
+                    <p className="font-display text-xl text-warning mt-1">
+                      {fmtNum(mean(veteranos.map((v) => v["Tempo Empresa"])) || 0, 1)}a
+                    </p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+                  {veteranosSubpagos.slice(0, 14).map((r, i) => (
+                    <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/60 transition-colors">
+                      <span className="text-xs font-mono text-muted-foreground w-12 shrink-0">{fmtNum(r["Tempo Empresa"], 1)}a</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{r.Funcionario}
+                          <span className="text-xs text-muted-foreground ml-1.5">· {r.Cargo} · {r.Setor}</span>
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono text-xs">{fmtBRL(r["Salario Base"])}</p>
+                        <p className="text-[10px] text-muted-foreground">mediana {fmtBRL(r.mediana)}</p>
+                      </div>
+                    </li>
+                  ))}
+                  {!veteranosSubpagos.length && (
+                    <li className="text-sm text-muted-foreground py-4 text-center">Nenhum veterano subpago no filtro atual.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+
+            {/* CANDIDATOS A DESLIGAMENTO + OUTLIERS */}
+            <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div className="glass-card rounded-xl p-5 animate-fade-in-up border-l-4 border-l-danger">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-danger/15 text-danger"><UserMinus className="h-5 w-5" /></div>
+                  <div>
+                    <h3 className="font-display font-semibold">Candidatos a desligamento ({riscoDemissao.length})</h3>
+                    <p className="text-xs text-muted-foreground">≥ 8 anos de casa + custo acima da média + produtividade abaixo da média</p>
+                  </div>
+                </div>
+                <ul className="space-y-1.5 max-h-[360px] overflow-y-auto pr-1">
+                  {riscoDemissao.slice(0, 12).map((r, i) => (
+                    <li key={i} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-danger/5 hover:bg-danger/10 transition-colors">
+                      <ShieldAlert className="h-4 w-4 text-danger shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{r.Funcionario}</p>
+                        <p className="text-xs text-muted-foreground truncate">{r.Cargo} · {r.Setor} · {fmtNum(r["Tempo Empresa"], 1)}a</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono text-xs">{fmtBRL(r["Custo Total"])}</p>
+                        <p className="text-[10px] text-muted-foreground">{fmtNum(r.Produtividade, 0)} pts</p>
+                      </div>
+                    </li>
+                  ))}
+                  {!riscoDemissao.length && (
+                    <li className="text-sm text-muted-foreground py-4 text-center">Nenhum colaborador atende aos três critérios simultaneamente.</li>
+                  )}
+                </ul>
               </div>
 
-              <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "120ms" }}>
+              <div className="glass-card rounded-xl p-5 animate-fade-in-up" style={{ animationDelay: "60ms" }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-lg bg-danger/15 text-danger"><AlertTriangle className="h-5 w-5" /></div>
+                  <div className="p-2 rounded-lg bg-primary/15 text-primary"><AlertTriangle className="h-5 w-5" /></div>
                   <div>
                     <h3 className="font-display font-semibold">Outliers de custo ({outliersCusto.length})</h3>
-                    <p className="text-xs text-muted-foreground">Detectado por IQR (1.5×)</p>
+                    <p className="text-xs text-muted-foreground">Detectado por IQR 1.5× — auditar horas extras, adicionais e benefícios</p>
                   </div>
                 </div>
                 <PersonList rows={outliersCusto} metric={(r) => fmtBRL(r["Custo Total"])} />
@@ -626,14 +778,21 @@ function buildInsights(p: any) {
   if (p.veteranosSubpagosCount > 0) {
     cards.push({
       tag: "Retenção", setor: "Transversal", tone: "warning",
-      text: `${p.veteranosSubpagosCount} colaboradores com 7+ anos de casa estão recebendo abaixo de 85% da média da empresa. Risco de turnover de conhecimento crítico.`,
+      text: `${p.veteranosSubpagosCount} veteranos (5+ anos) recebem abaixo da mediana do próprio cargo, gap de ${fmtBRL(p.gapMensalTotal)}/mês. Risco real de turnover de conhecimento institucional.`,
+    });
+  }
+
+  if (p.riscoDemissaoCount > 0) {
+    cards.push({
+      tag: "Desligamento", setor: "Transversal", tone: "danger",
+      text: `${p.riscoDemissaoCount} colaboradores com 8+ anos de casa combinam custo acima da média e produtividade abaixo da média. Avaliar plano de transição, requalificação ou desligamento estruturado.`,
     });
   }
 
   if (p.estagiariosCount > 0) {
     cards.push({
-      tag: "Pipeline", setor: "Transversal", tone: "primary",
-      text: `${p.estagiariosCount} estagiários ativos. Avalie programa de efetivação para reter talento de baixo custo com produtividade comparável aos juniores.`,
+      tag: "Compliance", setor: "Transversal", tone: "danger",
+      text: `${p.estagiariosCount} estagiários com salário acima do limite de R$ 1.500, gerando desperdício anual estimado de ${fmtBRL(p.desperdicioEstagiarios)}. Padronizar contratos antes de qualquer reajuste.`,
     });
   }
 
