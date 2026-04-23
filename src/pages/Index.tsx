@@ -344,6 +344,16 @@ const Index = () => {
     .filter((s) => s.custoTotal > custoMedioSetor && s.prodMedia < prodMediaSetor)
     .map((s) => s.setor);
 
+  // Cross-filter helpers — clicar em uma barra/fatia define o setor filtrado
+  const handleSectorClick = (setor?: string) => {
+    if (!setor) return;
+    setSetorFiltro(setorFiltro === setor ? "__all__" : setor);
+  };
+  const onChartClickFactory = (labels: string[]) => (_evt: any, els: any[]) => {
+    if (!els?.length) return;
+    handleSectorClick(labels[els[0].index]);
+  };
+
   return (
     <div className="min-h-screen flex bg-background text-foreground">
       <Sidebar active={active} onSelect={(id) => {
@@ -442,7 +452,7 @@ const Index = () => {
             <div className="glass-card rounded-xl overflow-hidden animate-fade-in-up">
               <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-secondary/30">
                 <p className="text-xs text-muted-foreground">
-                  Clique nos cabeçalhos para ordenar • {agg.length} setor(es)
+                  <span className="text-foreground font-medium">{agg.length}</span> setor(es) • clique no cabeçalho para ordenar • clique numa linha para filtrar
                 </p>
                 <SortMenu
                   value={tableSortKey}
@@ -464,7 +474,7 @@ const Index = () => {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="text-xs uppercase tracking-wider text-muted-foreground bg-secondary/50">
+                  <thead className="sticky top-0 z-10 text-[11px] uppercase tracking-[0.12em] text-muted-foreground bg-secondary/70 backdrop-blur">
                     <tr>
                       {([
                         ["setor", "Setor"],
@@ -485,11 +495,11 @@ const Index = () => {
                               if (active) setTableSortDir(tableSortDir === "asc" ? "desc" : "asc");
                               else { setTableSortKey(key as any); setTableSortDir(key === "setor" ? "asc" : "desc"); }
                             }}
-                            className={`text-left px-4 py-3 font-medium cursor-pointer select-none hover:text-foreground transition-colors ${active ? "text-foreground" : ""}`}
+                            className={`text-left px-4 py-3 font-semibold cursor-pointer select-none hover:text-foreground transition-colors border-b border-border ${active ? "text-primary" : ""}`}
                           >
                             <span className="inline-flex items-center gap-1">
                               {h}
-                              {active && <span className="text-[10px] opacity-70">{tableSortDir === "desc" ? "↓" : "↑"}</span>}
+                              {active && <span className="text-[10px]">{tableSortDir === "desc" ? "▼" : "▲"}</span>}
                             </span>
                           </th>
                         );
@@ -502,28 +512,35 @@ const Index = () => {
                       const dir = tableSortDir === "asc" ? 1 : -1;
                       if (k === "setor") return a.setor.localeCompare(b.setor) * dir;
                       return ((a as any)[k] - (b as any)[k]) * dir;
-                    }).map((s) => (
-                      <tr key={s.setor} className="border-t border-border hover:bg-secondary/30 transition-colors">
+                    }).map((s, idx) => {
+                      const isFiltered = setorFiltro === s.setor;
+                      return (
+                      <tr
+                        key={s.setor}
+                        onClick={() => setSetorFiltro(isFiltered ? "__all__" : s.setor)}
+                        className={`row-hover cursor-pointer border-t border-border/60 ${idx % 2 === 1 ? "bg-secondary/10" : ""} ${isFiltered ? "bg-primary/10 shadow-[inset_3px_0_0_hsl(var(--primary))]" : ""}`}
+                      >
                         <td className="px-4 py-3 font-medium">
-                          <div className="flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: colorFor(s.setor) }} />
-                            {s.setor}
+                          <div className="flex items-center gap-2.5">
+                            <span className="h-2.5 w-2.5 rounded-full ring-2 ring-background" style={{ backgroundColor: colorFor(s.setor), boxShadow: `0 0 12px ${colorFor(s.setor)}80` }} />
+                            <span className={isFiltered ? "text-primary" : ""}>{s.setor}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{s.headcount}</td>
-                        <td className="px-4 py-3 font-mono">{fmtBRL(s.custoTotal)}</td>
+                        <td className="px-4 py-3 font-mono tabular-nums">{fmtBRL(s.custoTotal)}</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{fmtBRL(s.custoMedio)}</td>
                         <td className="px-4 py-3">
                           <ProdBar value={s.prodMedia} />
                         </td>
-                        <td className="px-4 py-3 font-mono">{fmtBRL(s.custoPorResultado)}</td>
+                        <td className="px-4 py-3 font-mono tabular-nums">{fmtBRL(s.custoPorResultado)}</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{fmtNum(s.co2Total, 0)} kg</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{fmtNum(s.co2Medio, 1)} kg</td>
                         <td className="px-4 py-3">
                           <DespBadge value={s.desperdicioMedio} />
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -546,9 +563,10 @@ const Index = () => {
             <SectionHeader eyebrow="Visualizações" title="Gráficos interativos"
               description="Hover nos pontos e barras para detalhes. Filtros no topo afetam todos os gráficos." />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <ChartCard title="Custo total por setor" subtitle="Ordenado do maior para o menor">
+              <ChartCard title="Custo total por setor" subtitle="Clique em uma barra para filtrar pelo setor">
                 <Bar data={custoData} options={{
                   ...baseOptions,
+                  onClick: onChartClickFactory(orderByCusto.map((s) => s.setor)),
                   plugins: {
                     ...baseOptions.plugins,
                     legend: { display: false },
@@ -565,9 +583,10 @@ const Index = () => {
                   },
                 } as any} />
               </ChartCard>
-              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100">
+              <ChartCard title="Produtividade média por setor" subtitle="Pontuação 0–100 • clique para filtrar">
                 <Bar data={prodData} options={{
                   ...baseOptions,
+                  onClick: onChartClickFactory(orderByProd.map((s) => s.setor)),
                   plugins: {
                     ...baseOptions.plugins,
                     legend: { display: false },
@@ -582,9 +601,10 @@ const Index = () => {
                   },
                 } as any} />
               </ChartCard>
-              <ChartCard title="Headcount por setor" subtitle="Distribuição de colaboradores">
+              <ChartCard title="Headcount por setor" subtitle="Clique numa fatia para filtrar pelo setor">
                 <Doughnut data={headcountData} options={{
                   responsive: true, maintainAspectRatio: false,
+                  onClick: onChartClickFactory(agg.map((s) => s.setor)),
                   plugins: {
                     legend: { position: "right" as const, labels: { color: "rgba(226,232,240,0.85)", font: { size: 11 }, padding: 12, usePointStyle: true, pointStyle: "circle" } },
                     tooltip: {
@@ -621,10 +641,11 @@ const Index = () => {
                   },
                 }} />
               </ChartCard>
-              <ChartCard title="CO₂ total por setor" subtitle="Impacto ambiental acumulado">
+              <ChartCard title="CO₂ total por setor" subtitle="Impacto ambiental acumulado • clique para filtrar">
                 <Bar data={co2Data} options={{
                   ...baseOptions,
                   indexAxis: "y" as const,
+                  onClick: onChartClickFactory([...agg].sort((a, b) => b.co2Total - a.co2Total).map((s) => s.setor)),
                   plugins: {
                     ...baseOptions.plugins,
                     legend: { display: false },
