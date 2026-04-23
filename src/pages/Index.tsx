@@ -284,6 +284,7 @@ const Index = () => {
     riscoDemissaoCount: riscoDemissao.length,
     outliersCount: outliersCusto.length,
     totalCusto, totalCO2, prodMedia, headcount,
+    economiaEstagiariosAno, economiaDemissaoAno, economiaTotalAno,
     aggAll,
   });
 
