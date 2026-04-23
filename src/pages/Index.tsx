@@ -449,7 +449,7 @@ const Index = () => {
               />
               <DiagnosticoCard icon={Award} tone="success" label="Melhor custo-benefício"
                 setor={setorMelhorCB?.setor}
-                detail={setorMelhorCB && `${fmtNum((setorMelhorCB.prodMedia / setorMelhorCB.custoMedio) * 1000, 2)} pts por R$ 1k • ${fmtNum(setorMelhorCB.prodMedia, 1)} pts médios`}
+                detail={setorMelhorCB && `${fmtNum(setorMelhorCB.prodMedia, 1)} pts • ${fmtBRL(setorMelhorCB.custoMedio)}/func • score ${fmtNum(setorMelhorCB.cbScore * 100, 0)}/100`}
               />
             </div>
           </section>
