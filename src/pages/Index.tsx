@@ -1092,7 +1092,7 @@ const Index = () => {
               <ExecBlock icon={CheckCircle2} color="success" title="Destaques positivos">
                 {setorMelhorCB && (
                   <li>Melhor custo-benefício: <strong>{setorMelhorCB.setor}</strong> (
-                    {fmtNum((setorMelhorCB.prodMedia / setorMelhorCB.custoMedio) * 1000, 2)} pontos de produtividade por R$ 1.000 investidos — {fmtNum(setorMelhorCB.prodMedia, 1)} pts médios a R$ {fmtNum(setorMelhorCB.custoMedio / 1000, 1)}k/func).</li>
+                    score balanceado {fmtNum(setorMelhorCB.cbScore * 100, 0)}/100 — {fmtNum(setorMelhorCB.prodMedia, 1)} pts de produtividade a {fmtBRL(setorMelhorCB.custoMedio)}/func, combinando alta entrega com custo controlado).</li>
                 )}
               </ExecBlock>
 
