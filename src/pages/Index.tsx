@@ -3,7 +3,7 @@ import { Bar, Doughnut, Scatter, Line } from "react-chartjs-2";
 import {
   DollarSign, Activity, Leaf, Award, AlertTriangle, Users, Sparkles,
   TrendingDown, TrendingUp, Briefcase, GraduationCap, Clock, Zap, UserMinus, ShieldAlert,
-  CheckCircle2, PiggyBank, Target,
+  CheckCircle2, PiggyBank, Target, Lightbulb, BarChart3, AlertOctagon,
 } from "lucide-react";
 import { useDataset } from "@/hooks/useDataset";
 import {
