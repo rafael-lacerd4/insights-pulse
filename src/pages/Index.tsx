@@ -439,17 +439,69 @@ const Index = () => {
             <SectionHeader eyebrow="Indicadores" title="KPIs por setor"
               description="Tabela detalhada com custo, produtividade, CO₂ e desperdício para cada setor filtrado." />
             <div className="glass-card rounded-xl overflow-hidden animate-fade-in-up">
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-secondary/30">
+                <p className="text-xs text-muted-foreground">
+                  Clique nos cabeçalhos para ordenar • {agg.length} setor(es)
+                </p>
+                <SortMenu
+                  value={tableSortKey}
+                  direction={tableSortDir}
+                  onDirectionChange={setTableSortDir}
+                  onChange={(v) => setTableSortKey(v as any)}
+                  options={[
+                    { value: "setor", label: "Setor (A–Z)" },
+                    { value: "headcount", label: "Headcount" },
+                    { value: "custoTotal", label: "Custo Total" },
+                    { value: "custoMedio", label: "Custo Médio" },
+                    { value: "prodMedia", label: "Produtividade" },
+                    { value: "custoPorResultado", label: "Custo / Resultado" },
+                    { value: "co2Total", label: "CO₂ Total" },
+                    { value: "co2Medio", label: "CO₂ Médio" },
+                    { value: "desperdicioMedio", label: "Desperdício" },
+                  ]}
+                />
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-xs uppercase tracking-wider text-muted-foreground bg-secondary/50">
                     <tr>
-                      {["Setor","Headcount","Custo Total","Custo Médio","Produtividade","Custo/Resultado","CO₂ Total","CO₂ Médio","Desperdício"].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
-                      ))}
+                      {([
+                        ["setor", "Setor"],
+                        ["headcount", "Headcount"],
+                        ["custoTotal", "Custo Total"],
+                        ["custoMedio", "Custo Médio"],
+                        ["prodMedia", "Produtividade"],
+                        ["custoPorResultado", "Custo/Resultado"],
+                        ["co2Total", "CO₂ Total"],
+                        ["co2Medio", "CO₂ Médio"],
+                        ["desperdicioMedio", "Desperdício"],
+                      ] as const).map(([key, h]) => {
+                        const active = tableSortKey === key;
+                        return (
+                          <th
+                            key={key}
+                            onClick={() => {
+                              if (active) setTableSortDir(tableSortDir === "asc" ? "desc" : "asc");
+                              else { setTableSortKey(key as any); setTableSortDir(key === "setor" ? "asc" : "desc"); }
+                            }}
+                            className={`text-left px-4 py-3 font-medium cursor-pointer select-none hover:text-foreground transition-colors ${active ? "text-foreground" : ""}`}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              {h}
+                              {active && <span className="text-[10px] opacity-70">{tableSortDir === "desc" ? "↓" : "↑"}</span>}
+                            </span>
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
-                    {[...agg].sort((a, b) => b.custoTotal - a.custoTotal).map((s) => (
+                    {[...agg].sort((a, b) => {
+                      const k = tableSortKey;
+                      const dir = tableSortDir === "asc" ? 1 : -1;
+                      if (k === "setor") return a.setor.localeCompare(b.setor) * dir;
+                      return ((a as any)[k] - (b as any)[k]) * dir;
+                    }).map((s) => (
                       <tr key={s.setor} className="border-t border-border hover:bg-secondary/30 transition-colors">
                         <td className="px-4 py-3 font-medium">
                           <div className="flex items-center gap-2">
