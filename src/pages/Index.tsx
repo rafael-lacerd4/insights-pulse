@@ -439,9 +439,9 @@ const Index = () => {
                 setor={setorMaisCaro?.setor}
                 detail={setorMaisCaro && `${fmtBRL(setorMaisCaro.custoTotal)} • ${setorMaisCaro.headcount} func • médio ${fmtBRL(setorMaisCaro.custoMedio)}`}
               />
-              <DiagnosticoCard icon={TrendingDown} tone="warning" label="Setor menos produtivo"
+              <DiagnosticoCard icon={AlertOctagon} tone="danger" label="Pior rendimento" badge="crítico"
                 setor={setorMenosProd?.setor}
-                detail={setorMenosProd && `${fmtNum(setorMenosProd.prodMedia, 1)} pts • ${fmtNum(setorMenosProd.projetosMedio, 1)} proj/func`}
+                detail={setorMenosProd && `${fmtNum(setorMenosProd.prodMedia, 1)} pts • ${fmtNum(setorMenosProd.prodMedia - prodMedia, 1)} vs média • ${fmtNum(setorMenosProd.projetosMedio, 1)} proj/func`}
               />
               <DiagnosticoCard icon={Leaf} tone="warning" label="Maior CO₂"
                 setor={setorMaiorCO2?.setor}
@@ -533,6 +533,11 @@ const Index = () => {
                           <div className="flex items-center gap-2.5">
                             <span className="h-2.5 w-2.5 rounded-full ring-2 ring-background" style={{ backgroundColor: colorFor(s.setor), boxShadow: `0 0 12px ${colorFor(s.setor)}80` }} />
                             <span className={isFiltered ? "text-primary" : ""}>{s.setor}</span>
+                            {setorMenosProd?.setor === s.setor && (
+                              <Badge variant="outline" className="ml-1 gap-1 border-danger/40 bg-danger/10 text-danger text-[10px] px-1.5 py-0 h-5">
+                                <AlertOctagon className="h-3 w-3" /> produtividade crítica
+                              </Badge>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{s.headcount}</td>
