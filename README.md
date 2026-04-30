@@ -8,7 +8,7 @@
 
 ## 🧭 Sobre o Projeto
 
-O **Insights Pulse** é um sistema de Business Intelligence voltado para a gestão estratégica de pessoas, desenvolvido como projeto final do curso **Análise de Dados e Inteligência Artificial Aplicada à Sustentabilidade**.
+O **Insights Pulse** é um sistema de Business Intelligence voltado para a gestão estratégica de pessoas, desenvolvido como projeto do curso **Análise de Dados e Inteligência Artificial Aplicada à Sustentabilidade**.
 
 A base de dados contém **1.200 funcionários** distribuídos em 8 setores corporativos. O pipeline completo passou por auditoria técnica com **99,25% de integridade confirmada**, e os resultados foram entregues em um dashboard executivo interativo.
 
