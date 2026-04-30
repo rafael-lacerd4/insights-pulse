@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { RefreshCw, ExternalLink, Filter, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SyncSheetDialog } from "./SyncSheetDialog";
 
 interface Props {
   setores: string[];
@@ -84,6 +85,8 @@ export const Topbar = ({
             <RefreshCw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
             Atualizar
           </Button>
+
+          <SyncSheetDialog />
 
           <a
             href="https://docs.google.com/spreadsheets/d/10B4GU7s-Q7DnsBOM24VbVkKP7-sSsRgO/edit"
