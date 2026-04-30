@@ -259,8 +259,8 @@ const Index = () => {
         g.addColorStop(1, base + "ff");
         return g;
       },
-      borderColor: orderByProd.map((s) => colorFor(s.setor)),
-      borderWidth: 1.5,
+      borderColor: orderByProd.map((s) => s.setor === setorMenosProd?.setor ? "hsl(var(--danger))" : colorFor(s.setor)),
+      borderWidth: orderByProd.map((s) => s.setor === setorMenosProd?.setor ? 3 : 1.5),
       borderRadius: 10,
       borderSkipped: false,
     }],
@@ -439,9 +439,9 @@ const Index = () => {
                 setor={setorMaisCaro?.setor}
                 detail={setorMaisCaro && `${fmtBRL(setorMaisCaro.custoTotal)} • ${setorMaisCaro.headcount} func • médio ${fmtBRL(setorMaisCaro.custoMedio)}`}
               />
-              <DiagnosticoCard icon={TrendingDown} tone="warning" label="Setor menos produtivo"
+              <DiagnosticoCard icon={AlertOctagon} tone="danger" label="Pior rendimento" badge="crítico"
                 setor={setorMenosProd?.setor}
-                detail={setorMenosProd && `${fmtNum(setorMenosProd.prodMedia, 1)} pts • ${fmtNum(setorMenosProd.projetosMedio, 1)} proj/func`}
+                detail={setorMenosProd && `${fmtNum(setorMenosProd.prodMedia, 1)} pts • ${fmtNum(setorMenosProd.prodMedia - prodMedia, 1)} vs média • ${fmtNum(setorMenosProd.projetosMedio, 1)} proj/func`}
               />
               <DiagnosticoCard icon={Leaf} tone="warning" label="Maior CO₂"
                 setor={setorMaiorCO2?.setor}
@@ -533,6 +533,11 @@ const Index = () => {
                           <div className="flex items-center gap-2.5">
                             <span className="h-2.5 w-2.5 rounded-full ring-2 ring-background" style={{ backgroundColor: colorFor(s.setor), boxShadow: `0 0 12px ${colorFor(s.setor)}80` }} />
                             <span className={isFiltered ? "text-primary" : ""}>{s.setor}</span>
+                            {setorMenosProd?.setor === s.setor && (
+                              <Badge variant="outline" className="ml-1 gap-1 border-danger/40 bg-danger/10 text-danger text-[10px] px-1.5 py-0 h-5">
+                                <AlertOctagon className="h-3 w-3" /> produtividade crítica
+                              </Badge>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">{s.headcount}</td>
@@ -1227,8 +1232,8 @@ const Index = () => {
 
 /* ============= sub-components ============= */
 
-const DiagnosticoCard = ({ icon: Icon, tone, label, setor, detail }: any) => (
-  <div className="glass-card rounded-xl p-4 animate-fade-in-up">
+const DiagnosticoCard = ({ icon: Icon, tone, label, setor, detail, badge }: any) => (
+  <div className={`glass-card rounded-xl p-4 animate-fade-in-up ${tone === "danger" ? "ring-1 ring-danger/30" : ""}`}>
     <div className="flex items-center gap-2.5 mb-2.5">
       <div className={`p-2 rounded-lg ${
         tone === "danger" ? "bg-danger/15 text-danger"
@@ -1238,7 +1243,12 @@ const DiagnosticoCard = ({ icon: Icon, tone, label, setor, detail }: any) => (
       }`}>
         <Icon className="h-4 w-4" />
       </div>
-      <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium">{label}</p>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex-1">{label}</p>
+      {badge && (
+        <span className={`text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded ${
+          tone === "danger" ? "bg-danger/20 text-danger" : "bg-warning/20 text-warning"
+        }`}>{badge}</span>
+      )}
     </div>
     <p className="font-display text-xl font-semibold">{setor ?? "—"}</p>
     <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{detail}</p>
