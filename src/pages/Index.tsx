@@ -259,8 +259,8 @@ const Index = () => {
         g.addColorStop(1, base + "ff");
         return g;
       },
-      borderColor: orderByProd.map((s) => colorFor(s.setor)),
-      borderWidth: 1.5,
+      borderColor: orderByProd.map((s) => s.setor === setorMenosProd?.setor ? "hsl(var(--danger))" : colorFor(s.setor)),
+      borderWidth: orderByProd.map((s) => s.setor === setorMenosProd?.setor ? 3 : 1.5),
       borderRadius: 10,
       borderSkipped: false,
     }],
