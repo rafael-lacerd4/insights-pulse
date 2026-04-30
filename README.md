@@ -24,7 +24,7 @@ O projeto cobre três dimensões críticas para qualquer organização:
 
 > **Acesse ao vivo:** [insights-pulse-71.lovable.app](https://insights-pulse-71.lovable.app/)
 
-![HR Executive BI — Diagnóstico Gerencial](./public/dashboard-preview.png)
+![HR Executive BI — Diagnóstico Gerencial](./public/dash.png)
 
 > 💡 **Como adicionar a imagem:** Faça o upload do screenshot acima na pasta `public/` do repositório com o nome `dashboard-preview.png`. A imagem aparecerá automaticamente aqui.
 
