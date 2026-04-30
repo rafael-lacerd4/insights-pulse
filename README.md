@@ -8,7 +8,7 @@
 
 ## 🧭 Sobre o Projeto
 
-O **Insights Pulse** é um sistema de Business Intelligence voltado para a gestão estratégica de pessoas, desenvolvido como projeto do curso **Análise de Dados e Inteligência Artificial Aplicada à Sustentabilidade**.
+O **Insights Pulse** é um sistema de Business Intelligence voltado para a gestão estratégica de pessoas, desenvolvido como projeto final do curso **Análise de Dados e Inteligência Artificial Aplicada à Sustentabilidade**.
 
 A base de dados contém **1.200 funcionários** distribuídos em 8 setores corporativos. O pipeline completo passou por auditoria técnica com **99,25% de integridade confirmada**, e os resultados foram entregues em um dashboard executivo interativo.
 
@@ -17,6 +17,70 @@ O projeto cobre três dimensões críticas para qualquer organização:
 - **Financeira** — Custo total e custo por resultado por setor
 - **Operacional** — Produtividade média, padrões de alto custo e baixa entrega
 - **Ambiental** — Emissões de CO₂ por setor, identificação de ineficiência ambiental estrutural
+
+---
+
+## 🖥️ O Dashboard
+
+> **Acesse ao vivo:** [insights-pulse-71.lovable.app](https://insights-pulse-71.lovable.app/)
+
+![HR Executive BI — Diagnóstico Gerencial](./public/dashboard-preview.png)
+
+> 💡 **Como adicionar a imagem:** Faça o upload do screenshot acima na pasta `public/` do repositório com o nome `dashboard-preview.png`. A imagem aparecerá automaticamente aqui.
+
+O dashboard foi construído com foco em clareza executiva — cada tela responde uma pergunta de negócio específica, sem ruído visual.
+
+### Estrutura de Navegação
+
+O painel lateral organiza o conteúdo em três blocos:
+
+**Visão Geral**
+- **Diagnóstico** — tela principal com visão macro da empresa e KPIs por setor em tabela interativa
+- **KPIs por Setor** — análise detalhada com métricas de custo, produtividade, CO₂ e desperdício
+
+**Análises**
+- **Padrões Críticos** — identificação dos funcionários e setores no quadrante de alto custo + baixa produtividade
+- **Gráficos** — visualizações comparativas entre setores
+- **Pessoas** — visão individual dos colaboradores
+
+**Estratégia**
+- **Sustentabilidade** — foco nas emissões de CO₂ e ineficiência ambiental por setor
+- **Análise Executiva** — resumo estratégico para tomada de decisão
+
+---
+
+### Tela Principal — Diagnóstico da Empresa
+
+A tela de Diagnóstico entrega quatro cartões de destaque imediato:
+
+| Cartão | Valor | Insight |
+|---|---|---|
+| 💰 Custo Total | R$ 12.987.667 | Média de R$ 10.823 por funcionário |
+| 📈 Produtividade Média | 53,7 pts | Benchmark da empresa |
+| 🌿 CO₂ Total | 46.142 kg | Média de 38,5 kg por funcionário |
+| 👥 Headcount | 1.200 | 19 estagiários acima do limite · 176 veteranos subpagos |
+
+Abaixo dos cartões, quatro destaques setoriais são exibidos automaticamente:
+
+- **Setor mais caro:** TI — R$ 2.485.397 · 130 func · média R$ 19.118
+- **Setor menos produtivo:** Atendimento — 43,2 pts · 2,6 proj/func
+- **Maior CO₂:** Operações — 19.460 kg · 77,8 kg/func
+- **Melhor custo-benefício:** Comercial — 58,5 pts · R$ 11.259/func · score 70/100
+
+---
+
+### Tabela de KPIs — Interativa e Ordenável
+
+A tabela de KPIs cobre os 8 setores com as seguintes colunas:
+
+`Setor` · `Headcount` · `Custo Total` · `Custo Médio` · `Produtividade` · `Custo/Resultado` · `CO₂ Total` · `CO₂ Médio` · `Desperdício`
+
+Funcionalidades:
+- **Ordenação** por qualquer coluna (clique no cabeçalho)
+- **Filtro por setor** clicando em uma linha
+- **Filtros globais** por setor e por cargo no topo da página
+- **Indicador de desperdício** com score colorido (verde = baixo, vermelho = alto)
+- **Barra visual de produtividade** — verde para alta, amarela para média
 
 ---
 
