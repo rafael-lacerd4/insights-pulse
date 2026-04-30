@@ -14,7 +14,162 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dataset_meta: {
+        Row: {
+          id: number
+          last_sync_at: string | null
+          sheet_name: string | null
+          source: string | null
+          spreadsheet_id: string | null
+          total_rows: number | null
+        }
+        Insert: {
+          id?: number
+          last_sync_at?: string | null
+          sheet_name?: string | null
+          source?: string | null
+          spreadsheet_id?: string | null
+          total_rows?: number | null
+        }
+        Update: {
+          id?: number
+          last_sync_at?: string | null
+          sheet_name?: string | null
+          source?: string | null
+          spreadsheet_id?: string | null
+          total_rows?: number | null
+        }
+        Relationships: []
+      }
+      diagnostico: {
+        Row: {
+          detalhamento: string | null
+          id: number
+          pergunta: string
+          setor: string | null
+          updated_at: string
+        }
+        Insert: {
+          detalhamento?: string | null
+          id?: number
+          pergunta: string
+          setor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          detalhamento?: string | null
+          id?: number
+          pergunta?: string
+          setor?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      funcionarios: {
+        Row: {
+          adicional_noturno: number | null
+          alerta_qualidade: string | null
+          atrasos: number | null
+          cargo: string
+          consumo_energia_kwh: number | null
+          custo_por_resultado: number | null
+          custo_total: number | null
+          deslocamento_km: number | null
+          emissao_co2: number | null
+          faixa_desperdicio: string | null
+          faltas: number | null
+          funcionario: string
+          horas_extras: number | null
+          id: number
+          impacto_sustentabilidade: number | null
+          nivel_risco: string | null
+          produtividade: number | null
+          projetos_entregues: number | null
+          salario_base: number | null
+          score_desperdicio: number | null
+          setor: string
+          sugestao_ia: string | null
+          tempo_empresa: number | null
+          updated_at: string
+          uso_papel: number | null
+        }
+        Insert: {
+          adicional_noturno?: number | null
+          alerta_qualidade?: string | null
+          atrasos?: number | null
+          cargo: string
+          consumo_energia_kwh?: number | null
+          custo_por_resultado?: number | null
+          custo_total?: number | null
+          deslocamento_km?: number | null
+          emissao_co2?: number | null
+          faixa_desperdicio?: string | null
+          faltas?: number | null
+          funcionario: string
+          horas_extras?: number | null
+          id?: number
+          impacto_sustentabilidade?: number | null
+          nivel_risco?: string | null
+          produtividade?: number | null
+          projetos_entregues?: number | null
+          salario_base?: number | null
+          score_desperdicio?: number | null
+          setor: string
+          sugestao_ia?: string | null
+          tempo_empresa?: number | null
+          updated_at?: string
+          uso_papel?: number | null
+        }
+        Update: {
+          adicional_noturno?: number | null
+          alerta_qualidade?: string | null
+          atrasos?: number | null
+          cargo?: string
+          consumo_energia_kwh?: number | null
+          custo_por_resultado?: number | null
+          custo_total?: number | null
+          deslocamento_km?: number | null
+          emissao_co2?: number | null
+          faixa_desperdicio?: string | null
+          faltas?: number | null
+          funcionario?: string
+          horas_extras?: number | null
+          id?: number
+          impacto_sustentabilidade?: number | null
+          nivel_risco?: string | null
+          produtividade?: number | null
+          projetos_entregues?: number | null
+          salario_base?: number | null
+          score_desperdicio?: number | null
+          setor?: string
+          sugestao_ia?: string | null
+          tempo_empresa?: number | null
+          updated_at?: string
+          uso_papel?: number | null
+        }
+        Relationships: []
+      }
+      padroes_criticos: {
+        Row: {
+          id: number
+          padrao: string
+          setor: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          padrao: string
+          setor: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          padrao?: string
+          setor?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
